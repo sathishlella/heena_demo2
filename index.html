@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heena Kousar // AI Researcher · Developer · Creator</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- three.js CDN for 3D animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        /* --- [SYSTEM_VARIABLES] --- */
+        :root {
+            /* DARK THEME (Default) */
+            --bg-deep: #010411;
+            --accent-pink: #F000B8;
+            --accent-cyan: #00E0FF;
+            --accent-gold: #FFD700;
+            --text-main: #E0EFFF;
+            --text-muted: #8899AB;
+            
+            --panel-bg: rgba(1, 4, 17, 0.75);
+            --panel-blur: 10px;
+            --panel-border-color: rgba(0, 224, 255, 0.3);
+            --panel-border: 1px solid var(--panel-border-color);
+            --panel-hover-border-color: var(--accent-cyan);
+            --panel-hover-border: 1px solid var(--panel-hover-border-color);
+            
+            --font-display: 'Chakra Petch', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --panel-radius: 8px;
+        }
+
+        :root[data-theme="light"] {
+            /* LIGHT THEME */
+            --bg-deep: #f0f4f9;
+            --accent-pink: #d9006c;
+            --accent-cyan: #0056b3;
+            --accent-gold: #b38600;
+            --text-main: #122239;
+            --text-muted: #5a687b;
+            
+            --panel-bg: rgba(255, 255, 255, 0.7);
+            --panel-blur: 12px;
+            --panel-border-color: rgba(0, 86, 179, 0.2);
+            --panel-border: 1px solid var(--panel-border-color);
+            --panel-hover-border-color: var(--accent-cyan);
+            --panel-hover-border: 1px solid var(--panel-hover-border-color);
+        }
+
+        /* --- [BASE_RESET] --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            overflow-x: hidden;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* --- [CINEMATIC_BACKGROUND – ASTRA STYLE] --- */
+        #astra-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            opacity: 0;
+            transition: opacity 2s ease-in;
+        }
+        
+        /* Dark overlay + scanlines */
+        .video-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to top, rgba(1, 4, 17, 0.9) 0%, rgba(1, 4, 17, 0.6) 60%, rgba(1, 4, 17, 0.9) 100%);
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+        .video-overlay::after {
+            content: ' ';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            animation: scanlines 0.4s linear infinite;
+            opacity: 0.3;
+        }
+        
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 4px; }
+        }
+
+        /* Light mode static background */
+        .light-mode-bg {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, #d4e7ff 0%, #f5f9ff 100%);
+            z-index: -3;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        :root[data-theme="light"] #astra-canvas,
+        :root[data-theme="light"] .video-overlay {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+        :root[data-theme="light"] .light-mode-bg {
+            opacity: 1;
+        }
+
+        /* --- [LOADING_SCREEN] --- */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem;
+            transition: opacity 1.5s ease-out, visibility 1.5s;
+        }
+        :root[data-theme="light"] #loading-screen {
+            background: #f0f4f9;
+        }
+        
+        .loading-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px var(--accent-cyan);
+        }
+        .loading-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: var(--accent-gold);
+            margin: 0.5rem 0 1.5rem;
+            letter-spacing: 1px;
+        }
+        .loading-quote {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-main);
+            max-width: 40ch;
+            margin-bottom: 2rem;
+        }
+
+        /* 3D Canvas Style (loader) */
+        #loading-3d-canvas {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+        
+        .loading-status {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            height: 20px;
+        }
+
+        .jack-in-button {
+            display: none;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            background: transparent;
+            border: 2px solid var(--accent-gold);
+            padding: 0.75rem 2rem;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            text-shadow: 0 0 10px var(--accent-gold);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        .jack-in-button:hover {
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        :root[data-theme="light"] .jack-in-button:hover {
+            background: rgba(179, 134, 0, 0.1);
+            box-shadow: 0 0 20px rgba(179, 134, 0, 0.5);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        #main-app {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+
+        /* --- [GAME_HUD] --- */
+        .hud {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10;
+            font-family: var(--font-display);
+            text-transform: uppercase;
+        }
+        
+        /* Objective */
+        #hud-objective {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            color: var(--accent-gold);
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px var(--accent-gold);
+            transition: color 0.5s ease;
+        }
+        #hud-objective-text {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            text-shadow: none;
+            transition: color 0.5s ease;
+        }
+
+        /* Top Right Controls */
+        .hud-top-right {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            text-align: right;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: color 0.5s ease;
+        }
+        #hud-sound-toggle {
+            pointer-events: all;
+            cursor: pointer;
+            color: var(--accent-cyan);
+            font-size: 1.5rem; /* Icon size */
+            transition: color 0.5s ease;
+        }
+        #hud-sound-toggle:hover {
+            color: var(--accent-pink);
+        }
+        
+        /* Theme Slider */
+        .theme-slider {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 50px;
+            height: 26px;
+            background-color: var(--bg-deep);
+            border: var(--panel-border);
+            border-radius: 100px;
+            padding: 4px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.5s ease, border-color 0.5s ease;
+            pointer-events: all;
+        }
+        .theme-slider .icon {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            z-index: 1;
+        }
+        .theme-slider .sun { color: #f39c12; }
+        .theme-slider .moon { color: #8b5cf6; }
+
+        .slider-knob {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: var(--text-main);
+            border-radius: 50%;
+            left: 3px;
+            transition: transform 0.3s ease, background-color 0.5s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .theme-slider input { display: none; }
+        .theme-slider input:checked + .slider-knob {
+            transform: translateX(24px);
+        }
+
+        /* --- [TOP NAVBAR] --- */
+        .top-nav {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.5rem 1.25rem;
+            background: rgba(1, 4, 17, 0.8);
+            border-radius: 999px;
+            border: 1px solid rgba(0, 224, 255, 0.3);
+            backdrop-filter: blur(10px);
+            pointer-events: all;
+        }
+        :root[data-theme="light"] .top-nav {
+            background: rgba(240, 244, 249, 0.85);
+            border-color: rgba(0, 86, 179, 0.2);
+        }
+        .top-nav a {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            text-decoration: none;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+        .top-nav a:hover {
+            color: var(--accent-cyan);
+            transform: translateY(-1px);
+        }
+        .top-nav a.nav-primary {
+            color: var(--accent-gold);
+        }
+
+        /* Minimap */
+        #hud-minimap {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 180px;
+            height: 140px;
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-cyan);
+            backdrop-filter: var(--panel-blur);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0 85%);
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .map-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            pointer-events: all;
+        }
+        .map-dot:hover {
+            transform: scale(1.5);
+            background: var(--accent-gold);
+        }
+        .map-dot.active {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: pulse 1s infinite;
+        }
+        #map-projects { top: 30%; left: 60%; }
+        #map-experience { top: 50%; left: 30%; }
+        #map-contact { top: 15%; left: 20%; }
+
+        /* --- [MAIN_CONTENT_WRAPPER] --- */
+        .main-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 10vh 2rem 5rem;
+        }
+        
+        /* --- [DISTRICT_STYLING] --- */
+        .district {
+            padding-top: 5rem; /* For scroll-spy offset */
+            margin-bottom: 5rem;
+        }
+        
+        .district-title {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            border-bottom: 2px solid var(--accent-cyan);
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+            transition: color 0.5s ease, border-color 0.5s ease, text-shadow 0.5s ease;
+        }
+        .district-title span {
+            font-size: 1rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: block;
+            transition: color 0.5s ease;
+        }
+
+        /* Holographic Panel */
+        .holo-panel {
+            background: var(--panel-bg);
+            border: var(--panel-border);
+            border-radius: var(--panel-radius);
+            backdrop-filter: var(--panel-blur);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .holo-panel:hover {
+            border: var(--panel-hover-border);
+            box-shadow: 0 0 20px rgba(0, 224, 255, 0.2);
+            transform: translateY(-5px);
+        }
+        :root[data-theme="light"] .holo-panel:hover {
+            box-shadow: 0 5px 20px rgba(0, 86, 179, 0.15);
+        }
+        
+        .holo-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -75%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            opacity: 0;
+            transition: left 0.6s ease;
+        }
+        :root[data-theme="light"] .holo-panel::before {
+            background: linear-gradient(to right, rgba(0, 86, 179,0) 0%, rgba(0, 86, 179,0.08) 50%, rgba(0, 86, 179,0) 100%);
+        }
+        .holo-panel:hover::before {
+            left: 125%;
+            opacity: 1;
+        }
+
+        /* --- [HERO_SECTION] --- */
+        .hero-section {
+            padding-top: 10vh;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+        .hero-title span {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 15px var(--accent-cyan);
+        }
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 50ch;
+        }
+
+        /* --- [PROJECTS_DISTRICT] --- */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 1.5rem;
+        }
+        .project-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.25rem;
+        }
+        .project-title {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            color: var(--accent-pink);
+            margin-bottom: 0;
+        }
+        .project-tag {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-left: 1rem;
+        }
+        .project-desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0.75rem 0;
+            flex-grow: 1;
+        }
+        .project-list {
+            list-style: none;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+        .project-list li {
+            position: relative;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .project-list li::before {
+            content: '▸';
+            position: absolute;
+            left: -1rem;
+            color: var(--accent-cyan);
+        }
+        .project-tech {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--panel-border-color);
+            padding-top: 1rem;
+            margin-top: auto;
+            word-spacing: 2px;
+        }
+        .project-tech strong {
+            color: var(--accent-cyan);
+        }
+        .live-demo {
+            color: var(--accent-gold);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .live-demo:hover {
+            text-decoration: underline;
+        }
+
+        /* --- [AI ANALYSIS BUTTON] --- */
+        .project-analysis {
+            margin-top: 1.5rem;
+            border-top: 1px dashed var(--panel-border-color);
+            padding-top: 1rem;
+        }
+        .analysis-button {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            color: var(--accent-gold);
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--accent-gold);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .analysis-button:hover {
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            color: #fff;
+        }
+        :root[data-theme="light"] .analysis-button {
+            background: rgba(179, 134, 0, 0.1);
+            border-color: var(--accent-gold);
+        }
+        :root[data-theme="light"] .analysis-button:hover {
+            background: rgba(179, 134, 0, 0.2);
+            box-shadow: 0 0 15px rgba(179, 134, 0, 0.3);
+            color: var(--accent-gold);
+        }
+
+        /* --- [CAREER_EVENT_LOG] --- */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            border-left: 2px solid var(--panel-border-color);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 0; /* Panels provide margin */
+        }
+        .timeline-item::before { /* Timeline Dot */
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 2.1rem;
+            width: 14px;
+            height: 14px;
+            background: var(--bg-deep);
+            border: 3px solid var(--accent-cyan);
+            border-radius: 50%;
+            z-index: 1;
+            box-shadow: 0 0 10px var(--accent-cyan);
+            transition: background-color 0.5s ease;
+        }
+        .timeline-item h3 { /* Role Title */
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            color: var(--accent-pink);
+            margin-bottom: 0;
+        }
+        .timeline-item h4 { /* Company */
+            font-size: 1rem;
+            color: var(--accent-cyan);
+            margin-bottom: 0.5rem;
+        }
+        .timeline-item .date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .timeline-item ul {
+            list-style: none;
+            padding-left: 1rem;
+            margin-top: 1rem;
+        }
+        .timeline-item ul li {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+        .timeline-item ul li::before {
+            content: '▸';
+            position: absolute;
+            left: -1rem;
+            color: var(--accent-cyan);
+        }
+
+        /* --- [SECURE_UPLINK] --- */
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .terminal-button {
+            background: var(--panel-bg);
+            border: var(--panel-border);
+            border-radius: var(--panel-radius);
+            backdrop-filter: var(--panel-blur);
+            padding: 2rem;
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--text-main);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .terminal-button:hover {
+            background: rgba(0, 224, 255, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(0, 224, 255, 0.2);
+        }
+        :root[data-theme="light"] .terminal-button:hover {
+            background: rgba(0, 86, 179, 0.1);
+            box-shadow: 0 5px 20px rgba(0, 86, 179, 0.15);
+        }
+        .terminal-button span {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* --- [DEBUG_TERMINAL_EASTER_EGG] --- */
+        #debug-terminal {
+            position: fixed;
+            inset: 0;
+            background: rgba(1, 4, 17, 0.95);
+            z-index: 90;
+            display: none;
+            flex-direction: column;
+            padding: 2rem;
+            font-family: var(--font-mono);
+            backdrop-filter: blur(10px);
+        }
+        :root[data-theme="light"] #debug-terminal {
+             background: rgba(240, 244, 249, 0.95);
+        }
+        
+        #debug-output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: var(--accent-pink);
+        }
+        .debug-input-line {
+            display: flex;
+            align-items: center;
+            color: var(--accent-cyan);
+        }
+        #debug-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--accent-cyan);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            padding-left: 0.5rem;
+        }
+        :root[data-theme="light"] #debug-input {
+             color: var(--accent-cyan);
+        }
+
+        /* --- [AI ANALYSIS MODAL STYLES] --- */
+        #gemini-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(1, 4, 17, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        :root[data-theme="light"] #gemini-modal-overlay {
+            background: rgba(240, 244, 249, 0.5);
+        }
+        #gemini-modal-overlay.modal-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        #gemini-modal-panel {
+            background: var(--bg-deep);
+            border: var(--panel-hover-border);
+            border-radius: var(--panel-radius);
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 224, 255, 0.3);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        :root[data-theme="light"] #gemini-modal-panel {
+             box-shadow: 0 10px 30px rgba(0, 86, 179, 0.2);
+        }
+        #gemini-modal-overlay.modal-visible #gemini-modal-panel {
+            transform: scale(1);
+        }
+        #gemini-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        #gemini-modal-close:hover {
+            color: var(--accent-pink);
+        }
+        #gemini-modal-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1.5rem;
+            padding-right: 2rem;
+        }
+        #gemini-modal-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            color: var(--text-main);
+        }
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--panel-border-color);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- [RESPONSIVENESS] --- */
+        @media (max-width: 900px) {
+            .hud {
+                font-size: 0.8rem;
+            }
+            #hud-objective, .hud-top-right, #hud-minimap {
+                transform: scale(0.8);
+                transform-origin: top left;
+            }
+            .hud-top-right { transform-origin: top right; }
+            #hud-minimap { transform-origin: bottom left; }
+            .top-nav {
+                transform: translateX(-50%) scale(0.9);
+            }
+        }
+        @media (max-width: 600px) {
+            .district-title {
+                font-size: 2rem;
+            }
+            .main-wrapper {
+                padding: 10vh 1rem 5rem;
+            }
+            .holo-panel {
+                padding: 1.5rem;
+            }
+            .project-grid {
+                grid-template-columns: 1fr;
+            }
+            .top-nav {
+                gap: 0.8rem;
+                padding: 0.4rem 0.9rem;
+            }
+            .top-nav a {
+                font-size: 0.7rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- --- [LOADING_SCREEN] --- -->
+    <div id="loading-screen">
+        <h1 class="loading-title">Heena Kousar</h1>
+        <h2 class="loading-subtitle">AI Researcher · Developer · Creator</h2>
+        <p class="loading-quote">"I don’t just write code — I create worlds where machines learn and stories think."</p>
+        
+        <!-- 3D loader -->
+        <canvas id="loading-3d-canvas"></canvas>
+        <div id="loading-status">INITIATING AI CORE...</div>
+
+        <button id="jack-in-button" class="jack-in-button" data-sfx="click">[ JACK IN ]</button>
+    </div>
+    
+    <!-- --- [MAIN_APP_WRAPPER] --- -->
+    <div id="main-app">
+        <!-- Backgrounds -->
+        <canvas id="astra-canvas"></canvas>
+        <div class="light-mode-bg"></div>
+        <div class="video-overlay"></div>
+        
+        <!-- Ambient Audio -->
+        <audio id="ambient-music" loop>
+            <source src="https://cdn.pixabay.com/audio/2022/11/22/audio_2911851b4b.mp3" type="audio/mpeg">
+        </audio>
+
+        <!-- Game HUD -->
+        <div class="hud">
+            <div id="hud-objective">
+                OBJECTIVE:
+                <div id="hud-objective-text">Access Neural City</div>
+            </div>
+
+            <!-- TOP NAVBAR -->
+            <nav class="top-nav">
+                <a href="#hero-section" class="nav-primary">Home</a>
+                <a href="#projects-district">Projects</a>
+                <a href="#experience-district">Experience</a>
+                <a href="#contact-district">Contact</a>
+            </nav>
+
+            <div class="hud-top-right">
+                <span id="hud-clock">00:00:00</span>
+                <span id="hud-sound-toggle" data-sfx="click">🔊</span>
+                
+                <label class="theme-slider" for="theme-toggle-input">
+                    <input type="checkbox" id="theme-toggle-input">
+                    <span class="slider-knob"></span>
+                    <span class="icon sun">☀</span>
+                    <span class="icon moon">🌙</span>
+                </label>
+            </div>
+
+            <div id="hud-minimap">
+                <div class="map-dot" id="map-projects" data-sfx="click" data-target="#projects-district" title="Project Database"></div>
+                <div class="map-dot" id="map-experience" data-sfx="click" data-target="#experience-district" title="Career Event Log"></div>
+                <div class="map-dot" id="map-contact" data-sfx="click" data-target="#contact-district" title="Secure Uplink"></div>
+            </div>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="main-wrapper">
+        
+            <!-- == HERO_SECTION == -->
+            <section id="hero-section" class="hero-section district">
+                <h1 class="hero-title">
+                    HEENA KOUSAR
+                    <br>
+                    <span>AI Researcher & World Builder</span>
+                </h1>
+                <p class="hero-subtitle">
+                    I’m an AI Researcher at the University of Southern California, working on 3D saree customization using AI + AR and personalized recommendation systems. I enjoy turning complex ML ideas into polished web experiences that users love.
+                    <br>
+                    Welcome to my portfolio.
+                </p>
+            </section>
+
+            <!-- == PROJECT DATABASE == -->
+            <section id="projects-district" class="district">
+                <h2 class="district-title"><span>[SECTOR_01]</span>// PROJECT DATABASE //</h2>
+                <div class="project-grid">
+                    
+                    <div class="holo-panel project-panel" data-sfx="hover">
+                        <div class="project-header">
+                            <h3 class="project-title">3D Saree Customization Platform</h3>
+                            <span class="project-tag">USC · AI + AR Research</span>
+                        </div>
+                        <p class="project-desc">AI-powered 3D saree customization and virtual try-on experience using computer vision, fabric simulation, and augmented reality.</p>
+                        <ul class="project-list">
+                            <li>Real-time saree draping and texture rendering using ML-based pattern recognition and simulation.</li>
+                            <li>AR visualization that lets users see sarees on themselves before purchase, enhancing confidence and personalization.</li>
+                        </ul>
+                        <div class="project-tech"><strong>Tech:</strong> Python, CV/ML, AR, Web · Focus: Retail AI, User Experience</div>
+                    
+                        <div class="project-analysis">
+                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                '3D Saree Customization Platform',
+                                'AI-powered 3D saree customization and virtual try-on experience using computer vision, fabric simulation, and augmented reality. Real-time saree draping and texture rendering using ML-based pattern recognition and simulation. AR visualization that lets users see sarees on themselves before purchase, enhancing confidence and personalization.'
+                            )">
+                                [ ✨ Run AI Analysis ]
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="holo-panel project-panel" data-sfx="hover">
+                        <div class="project-header">
+                            <h3 class="project-title">U.S. Army Onboarding & Access</h3>
+                            <span class="project-tag">JAN 2025 – MAY 2025</span>
+                        </div>
+                        <p class="project-desc">Designed a centralized digital platform to streamline onboarding and system access for the United States Army.</p>
+                        <ul class="project-list">
+                            <li>Conducted user research to identify pain points in fragmented onboarding systems.</li>
+                            <li>Built a web-based prototype integrating multiple databases with secure authentication to meet military compliance.</li>
+                            <li>Presented findings and go-to-market strategy to military leadership and technical teams.</li>
+                        </ul>
+                        <div class="project-tech"><strong>Focus:</strong> UX Research, System Design</div>
+                    
+                        <div class="project-analysis">
+                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                'U.S. Army Onboarding & Access',
+                                'Designed a centralized digital platform to streamline onboarding and system access for the United States Army. Conducted user research to identify pain points in fragmented onboarding systems. Built a web-based prototype integrating multiple databases with secure authentication to meet military compliance.'
+                            )">
+                                [ ✨ Run AI Analysis ]
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="holo-panel project-panel" data-sfx="hover">
+                        <div class="project-header">
+                            <h3 class="project-title">Mafia AI – Cinematic Mystery Game</h3>
+                            <a href="https://mafia-mystery.replit.app/" target="_blank" class="live-demo" data-sfx="click">Live Demo ↗</a>
+                        </div>
+                        <p class="project-desc">Story-driven mystery game blending AI-generated narrative with multi-world environments (Diwali, Wedding, Hogwarts, Cruise).</p>
+                        <ul class="project-list">
+                            <li>Architected front-end in React and back-end in Node.js with modular story components.</li>
+                            <li>Used AI to adjust clues and dialogue based on player behavior.</li>
+                            <li>Designed branding, UX flows, and responsive layouts for web.</li>
+                        </ul>
+                        <div class="project-tech"><strong>Tech:</strong> React, Node, AI APIs · Focus: Interactive Storytelling</div>
+                    
+                        <div class="project-analysis">
+                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                'Mafia AI – Cinematic Mystery Game',
+                                'Story-driven mystery game blending AI-generated narrative with multi-world environments (Diwali, Wedding, Hogwarts, Cruise). Architected front-end in React and back-end in Node.js. Used AI to adjust clues and dialogue based on player behavior.'
+                            )">
+                                [ ✨ Run AI Analysis ]
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="holo-panel project-panel" data-sfx="hover">
+                        <div class="project-header">
+                            <h3 class="project-title">Beauty Product Recommendation</h3>
+                            <span class="project-tag">USC · AI Product</span>
+                        </div>
+                        <p class="project-desc">AI system recommending beauty products by understanding user intent, preferences, and behavior.</p>
+                        <ul class="project-list">
+                            <li>Combined GPT-based understanding with FAISS vector search for efficient retrieval.</li>
+                            <li>Improved engagement and relevance with continuous A/B testing.</li>
+                        </ul>
+                        <div class="project-tech"><strong>Tech:</strong> Python, OpenAI, FAISS · Focus: Recommender Systems</div>
+                    
+                        <div class="project-analysis">
+                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                'Beauty Product Recommendation Engine',
+                                'AI system recommending beauty products by understanding user intent, preferences, and behavior. Combined GPT-based understanding with FAISS vector search for efficient retrieval. Improved engagement and relevance with continuous A/B testing.'
+                            )">
+                                [ ✨ Run AI Analysis ]
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+            
+            <!-- == CAREER EVENT LOG == -->
+            <section id="experience-district" class="district">
+                <h2 class="district-title"><span>[SECTOR_02]</span>// PROFESSIONAL EXPERIENCE //</h2>
+                <div class="timeline">
+                    
+                    <div class="holo-panel timeline-item" data-sfx="hover">
+                        <h3>AI Researcher</h3>
+                        <h4>University of Southern California</h4>
+                        <span class="date">[JULY 2025 – PRESENT]</span>
+                        <ul>
+                            <li>Architecting the 3D Saree Customization AI/AR platform.</li>
+                            <li>Developing core ML models for fabric simulation and pattern recognition.</li>
+                        </ul>
+                    </div>
+
+                    <div class="holo-panel timeline-item" data-sfx="hover">
+                        <h3>Co-Founder</h3>
+                        <h4>Mafia AI (Independent Project)</h4>
+                        <span class="date">[OCT 2025 – PRESENT]</span>
+                        <ul>
+                            <li>Led full-stack development (React/Node) and UX for the cinematic AI game.</li>
+                        </ul>
+                    </div>
+
+                    <div class="holo-panel timeline-item" data-sfx="hover">
+                        <h3>AI Product Lead</h3>
+                        <h4>USC (Beauty Rec Engine)</h4>
+                        <span class="date">[JAN 2025 – MAY 2025]</span>
+                        <ul>
+                            <li>Managed end-to-end development of an AI recommendation system.</li>
+                            <li>Integrated OpenAI & FAISS, improving engagement by ~20%.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="holo-panel timeline-item" data-sfx="hover">
+                        <h3>Web Developer Intern</h3>
+                        <h4>Kintsugi Global, Los Angeles</h4>
+                        <span class="date">[MAY 2024 – JULY 2024]</span>
+                        <ul>
+                            <li>Built responsive React.js pages for an anime manga reader.</li>
+                            <li>Implemented smooth navigation and zoom features.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- == SECURE UPLINK == -->
+            <section id="contact-district" class="district">
+                <h2 class="district-title"><span>[SECTOR_03]</span>// CONTACT //</h2>
+                <div class="terminal-grid">
+                    <a href="mailto:hkbaig5@gmail.com?subject=Neural%20City%20Connection%20Request" class="terminal-button" data-sfx="click">
+                        INITIATE CONTACT
+                        <span>[hkbaig5@gmail.com]</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/heena-kousar-baig/" target="_blank" class="terminal-button" data-sfx="click">
+                        ACCESS: LINKEDIN
+                        <span>[Professional Network]</span>
+                    </a>
+                    <a href="Heena.pdf" class="terminal-button" data-sfx="click">
+                        REQUEST: RESUME
+                        <span>[Secure Data Packet]</span>
+                    </a>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- --- [AI ANALYSIS MODAL] --- -->
+    <div id="gemini-modal-overlay">
+        <div id="gemini-modal-panel" class="holo-panel">
+            <button id="gemini-modal-close" data-sfx="click">[ X ]</button>
+            <h2 id="gemini-modal-title">// RUNNING ANALYSIS...</h2>
+            <div id="gemini-modal-content">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- [DEBUG_TERMINAL_EASTER_EGG] --- -->
+    <div id="debug-terminal">
+        <div id="debug-output">
+            NEURAL_CITY_OS v2.0 DEBUG CONSOLE
+            (c) 2025 Heena Kousar, Architect.
+            Type 'help' for commands. Type 'exit' to close.
+            <br>
+        </div>
+        <div class="debug-input-line">
+            <span>HK_OS:/$</span>
+            <input type="text" id="debug-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- [AUDIO_CONTROLLER] ---
+            const AudioController = {
+                audioCtx: null,
+                soundEnabled: true,
+                ambient: document.getElementById('ambient-music'),
+                toggleButton: document.getElementById('hud-sound-toggle'),
+
+                init() {
+                    try {
+                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        this.ambient.volume = 0.3;
+                    } catch (e) {
+                        console.warn('Web Audio API not supported.');
+                    }
+                    
+                    this.toggleButton.addEventListener('click', () => this.toggleSound());
+
+                    // Bind hover/click sounds
+                    document.querySelectorAll('[data-sfx="hover"]').forEach(el => {
+                        el.addEventListener('mouseenter', () => this.playSound('hover'));
+                    });
+                    document.querySelectorAll('[data-sfx="click"]').forEach(el => {
+                        el.addEventListener('click', () => this.playSound('click'));
+                    });
+                },
+
+                playSound(type) {
+                    if (!this.soundEnabled || !this.audioCtx) return;
+                    
+                    const oscillator = this.audioCtx.createOscillator();
+                    const gainNode = this.audioCtx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioCtx.destination);
+                    
+                    gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+
+                    if (type === 'hover') {
+                        gainNode.gain.linearRampToValueAtTime(0.2, this.audioCtx.currentTime + 0.01);
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(800, this.audioCtx.currentTime);
+                    } else if (type === 'click') {
+                        gainNode.gain.linearRampToValueAtTime(0.3, this.audioCtx.currentTime + 0.01);
+                        oscillator.type = 'triangle';
+                        oscillator.frequency.setValueAtTime(1000, this.audioCtx.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(300, this.audioCtx.currentTime + 0.1);
+                    } else if (type === 'boot') {
+                        gainNode.gain.linearRampToValueAtTime(0.4, this.audioCtx.currentTime + 0.02);
+                        oscillator.type = 'sawtooth';
+                        oscillator.frequency.setValueAtTime(100, this.audioCtx.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(800, this.audioCtx.currentTime + 0.5);
+                    }
+
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.2);
+                    oscillator.start(this.audioCtx.currentTime);
+                    oscillator.stop(this.audioCtx.currentTime + 0.2);
+                },
+
+                toggleSound() {
+                    this.soundEnabled = !this.soundEnabled;
+                    this.toggleButton.innerHTML = this.soundEnabled ? '🔊' : '🔇';
+                    if (this.soundEnabled) {
+                        this.ambient.play();
+                    } else {
+                        this.ambient.pause();
+                    }
+                    this.playSound('click');
+                },
+                
+                startAmbient() {
+                    if (this.soundEnabled) {
+                        this.ambient.play().catch(e => console.log("Audio play blocked by browser."));
+                    }
+                }
+            };
+            AudioController.init();
+
+            // --- [THEME_CONTROLLER] ---
+            const themeToggle = document.getElementById('theme-toggle-input');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme');
+
+            if (savedTheme === 'light') {
+                html.setAttribute('data-theme', 'light');
+                themeToggle.checked = true;
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeToggle.checked = false;
+            }
+
+            themeToggle.addEventListener('change', () => {
+                AudioController.playSound('click');
+                if (themeToggle.checked) {
+                    html.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    html.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+
+
+            // --- [3D_LOADING_ANIMATION] ---
+            function init3DLoadingAnimation() {
+                const canvas = document.getElementById('loading-3d-canvas');
+                if (!canvas || !window.THREE) return;
+
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+                renderer.setSize(100, 100);
+
+                let cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+                
+                const geometry = new THREE.IcosahedronGeometry(1.5, 0);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: new THREE.Color(cyanColor), 
+                    wireframe: true 
+                });
+                const core = new THREE.Mesh(geometry, material);
+                scene.add(core);
+
+                camera.position.z = 3;
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    core.rotation.x += 0.005;
+                    core.rotation.y += 0.007;
+                    renderer.render(scene, camera);
+                }
+                animate();
+                
+                themeToggle.addEventListener('change', () => {
+                     cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+                     core.material.color.set(cyanColor);
+                });
+            }
+            init3DLoadingAnimation();
+
+            // --- [3D_PARTICLE_BACKGROUND – ASTRA STYLE] ---
+            let astraInitialized = false;
+            function initAstraBackground() {
+                const canvas = document.getElementById('astra-canvas');
+                if (!canvas || !window.THREE) return;
+                if (astraInitialized) return;
+                astraInitialized = true;
+
+                let scene, camera, renderer, particles, material;
+                let mouseX = 0, mouseY = 0;
+                let windowHalfX = window.innerWidth / 2;
+                let windowHalfY = window.innerHeight / 2;
+                
+                let cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+                camera.position.z = 1000;
+
+                const geometry = new THREE.BufferGeometry();
+                const vertices = [];
+                const numParticles = 10000;
+
+                for (let i = 0; i < numParticles; i++) {
+                    vertices.push(
+                        Math.random() * 2000 - 1000,
+                        Math.random() * 2000 - 1000,
+                        Math.random() * 2000 - 1000
+                    );
+                }
+
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+                material = new THREE.PointsMaterial({
+                    color: new THREE.Color(cyanColor),
+                    size: 1.5,
+                    transparent: true,
+                    opacity: 0.7,
+                    blending: THREE.AdditiveBlending
+                });
+
+                particles = new THREE.Points(geometry, material);
+                scene.add(particles);
+
+                renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio || 1);
+                renderer.setClearColor(0x000000, 0);
+
+                function onWindowResize() {
+                    windowHalfX = window.innerWidth / 2;
+                    windowHalfY = window.innerHeight / 2;
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+
+                function onDocumentMouseMove(event) {
+                    mouseX = (event.clientX - windowHalfX) * 0.2;
+                    mouseY = (event.clientY - windowHalfY) * 0.2;
+                }
+
+                function animate() {
+                    requestAnimationFrame(animate);
+
+                    const time = Date.now() * 0.00005;
+                    
+                    camera.position.x += (mouseX - camera.position.x) * 0.05;
+                    camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                    camera.lookAt(scene.position);
+
+                    particles.rotation.x = time * 0.2;
+                    particles.rotation.y = time * 0.5;
+
+                    renderer.render(scene, camera);
+                }
+
+                window.addEventListener('resize', onWindowResize, false);
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+                themeToggle.addEventListener('change', () => {
+                    const newColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+                    material.color.set(newColor);
+                });
+
+                animate();
+                canvas.style.opacity = '1';
+            }
+
+            if (html.getAttribute('data-theme') === 'dark') {
+                initAstraBackground();
+            }
+            themeToggle.addEventListener('change', () => {
+                if (html.getAttribute('data-theme') === 'dark') {
+                    initAstraBackground();
+                }
+            });
+
+
+            // --- [BOOT_SEQUENCE_CONTROLLER] ---
+            const loadingScreen = document.getElementById('loading-screen');
+            const loadingStatus = document.getElementById('loading-status');
+            const jackInButton = document.getElementById('jack-in-button');
+            const mainApp = document.getElementById('main-app');
+            const statusUpdates = [
+                "RENDERING NEON GRID...",
+                "CALIBRATING NEURAL NET...",
+                "ACCESSING AI CORE...",
+                "BOOT SEQUENCE COMPLETE."
+            ];
+            let statusIndex = 0;
+            
+            const statusInterval = setInterval(() => {
+                if (statusIndex < statusUpdates.length) {
+                    loadingStatus.textContent = statusUpdates[statusIndex];
+                    statusIndex++;
+                } else {
+                    clearInterval(statusInterval);
+                    jackInButton.style.display = 'block';
+                }
+            }, 750);
+
+            jackInButton.addEventListener('click', () => {
+                AudioController.playSound('boot');
+                AudioController.startAmbient();
+                
+                loadingScreen.style.opacity = '0';
+                loadingScreen.style.visibility = 'hidden';
+                mainApp.style.visibility = 'visible';
+                mainApp.style.opacity = '1';
+                
+                setTimeout(() => loadingScreen.remove(), 1500);
+            });
+
+            // --- [HUD_CONTROLLER] ---
+            const clock = document.getElementById('hud-clock');
+            const objectiveText = document.getElementById('hud-objective-text');
+            const sections = document.querySelectorAll('.district');
+            const mapDots = document.querySelectorAll('.map-dot');
+            
+            setInterval(() => {
+                clock.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+            }, 1000);
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    let mapDot = document.querySelector(`.map-dot[data-target="#${id}"]`);
+
+                    if (entry.isIntersecting) {
+                        let objective = "Explore Neural City";
+                        if (id === 'projects-district') objective = "Review Project Database";
+                        if (id === 'experience-district') objective = "Scan Career Event Log";
+                        if (id === 'contact-district') objective = "Access Secure Uplink";
+                        
+                        objectiveText.textContent = objective;
+                        
+                        mapDots.forEach(dot => dot.classList.remove('active'));
+                        if(mapDot) mapDot.classList.add('active');
+                    }
+                });
+            }, { rootMargin: "-40% 0px -60% 0px", threshold: 0 });
+
+            sections.forEach(sec => observer.observe(sec));
+            
+            mapDots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    document.querySelector(dot.dataset.target).scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            // --- [LOCAL AI ANALYSIS MODAL CONTROLLER] ---
+            const modalOverlay = document.getElementById('gemini-modal-overlay');
+            const modalTitle = document.getElementById('gemini-modal-title');
+            const modalContent = document.getElementById('gemini-modal-content');
+            const modalClose = document.getElementById('gemini-modal-close');
+            const loaderHTML = '<div class="loader"></div>';
+            
+            function generateLocalAnalysis(title, description) {
+                const descLower = description.toLowerCase();
+                const bullets = [];
+
+                if (descLower.includes('3d') || descLower.includes('ar')) {
+                    bullets.push("* Strong focus on immersive 3D/AR interfaces, combining perception, rendering, and real-time UX.");
+                }
+                if (descLower.includes('recommendation') || descLower.includes('faiss')) {
+                    bullets.push("* Emphasizes personalized recommendation systems with vector search and retrieval-augmented pipelines.");
+                }
+                if (descLower.includes('game')) {
+                    bullets.push("* Blends game design, narrative systems, and AI-driven behaviour for interactive storytelling.");
+                }
+                if (descLower.includes('army') || descLower.includes('onboarding')) {
+                    bullets.push("* Tackles complex onboarding and access workflows with an emphasis on usability and security.");
+                }
+
+                if (bullets.length === 0) {
+                    bullets.push("* Uses full-stack engineering and AI to solve user-centric problems.");
+                }
+
+                bullets.push("* Shows clear ownership across problem discovery, design, implementation, and iteration.");
+                bullets.push("* Demonstrates potential to scale into production settings with more data, users, and integration points.");
+                bullets.push("* Highlights a strong balance between technical depth and user experience.");
+
+                return `PROJECT: ${title}\n\n` +
+                       "Key Technical Takeaways:\n" +
+                       bullets.join("\n");
+            }
+
+            window.openAnalysisModal = async (title, description) => {
+                AudioController.playSound('click');
+                modalTitle.textContent = `// AI ANALYSIS: ${title}`;
+                modalContent.innerHTML = loaderHTML;
+                modalOverlay.classList.add('modal-visible');
+
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const analysisText = generateLocalAnalysis(title, description);
+                modalContent.textContent = analysisText;
+            };
+
+            function closeAnalysisModal() {
+                AudioController.playSound('click');
+                modalOverlay.classList.remove('modal-visible');
+                setTimeout(() => {
+                    modalContent.innerHTML = loaderHTML;
+                    modalTitle.textContent = "// RUNNING ANALYSIS...";
+                }, 300);
+            }
+
+            modalClose.addEventListener('click', closeAnalysisModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    closeAnalysisModal();
+                }
+            });
+
+            // --- [DEBUG_TERMINAL_CONTROLLER] ---
+            const terminal = document.getElementById('debug-terminal');
+            const output = document.getElementById('debug-output');
+            const input = document.getElementById('debug-input');
+            const mafiaArt = `
+    ███╗   ███╗ █████╗ ███████╗██╗ █████╗ 
+    ████╗ ████║██╔══██╗██╔════╝██║██╔══██╗
+    ██╔████╔██║███████║█████╗  ██║███████║
+    ██║╚██╔╝██║██╔══██║██╔══╝  ██║██╔══██║
+    ██║ ╚═╝ ██║██║  ██║███████╗██║██║  ██║
+    ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝
+            // [ARTIFICIAL_INTELLIGENCE] //
+            `;
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === '`' || e.key === '~') {
+                    e.preventDefault();
+                    AudioController.playSound('click');
+                    const isHidden = terminal.style.display === 'none' || terminal.style.display === '';
+                    terminal.style.display = isHidden ? 'flex' : 'none';
+                    if (isHidden) input.focus();
+                }
+                if (e.key === 'Escape' && terminal.style.display === 'flex') {
+                    AudioController.playSound('click');
+                    terminal.style.display = 'none';
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = input.value.trim().toLowerCase();
+                    output.textContent += `\nHK_OS:/$ ${cmd}\n`;
+                    
+                    switch (cmd) {
+                        case 'help':
+                            output.textContent += "Available commands:\n  run mafia_ai.exe  - [REDACTED]\n  ls_projects       - List active modules\n  clear             - Clear console\n  exit              - Close terminal";
+                            break;
+                        case 'run mafia_ai.exe':
+                            AudioController.playSound('boot');
+                            output.textContent += "Executing... Accessing secure module...\n" + mafiaArt + "\n'The only thing smarter than a con artist is the code running the con.'\nModule loaded.";
+                            break;
+                        case 'ls_projects':
+                            output.textContent += "[01] 3D_SAREE_CUSTOMIZATION\n[02] US_ARMY_ONBOARDING\n[03] MAFIA_AI_GAME\n[04] BEAUTY_REC_ENGINE";
+                            break;
+                        case 'clear':
+                            output.textContent = "NEURAL_CITY_OS v2.0 - Console Cleared.";
+                            break;
+                        case 'exit':
+                            terminal.style.display = 'none';
+                            break;
+                        default:
+                            output.textContent += `COMMAND_NOT_FOUND: "${cmd}". Type 'help' for list.`;
+                    }
+                    
+                    input.value = '';
+                    output.scrollTop = output.scrollHeight;
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
