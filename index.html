@@ -1,1562 +1,2886 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heena Kousar // AI Researcher · Developer · Creator</title>
+
+<html lang="en" data-theme="dark"> <head> <meta charset="UTF8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Heena Kousar // AI Researcher · Developer · Creator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+    /* --- [SYSTEM_VARIABLES] --- */
+    :root {
+        /* DARK THEME (Default) */
+        --bg-deep: #010411;
+        --accent-pink: #F000B8;
+        --accent-cyan: #00E0FF;
+        --accent-gold: #FFD700;
+        --text-main: #E0EFFF;
+        --text-muted: #8899AB;
+        
+        --panel-bg: rgba(1, 4, 17, 0.75);
+        --panel-blur: 10px;
+        --panel-border-color: rgba(0, 224, 255, 0.3);
+        --panel-border: 1px solid var(--panel-border-color);
+        --panel-hover-border-color: var(--accent-cyan);
+        --panel-hover-border: 1px solid var(--panel-hover-border-color);
+        
+        --font-display: 'Chakra Petch', sans-serif;
+        --font-mono: 'Space Mono', monospace;
+        --panel-radius: 8px;
+    }
+
+    /* [NEW] Vibrant Light Theme */
+    :root[data-theme="light"] {
+        --bg-deep: #f8f9fa;
+        --accent-pink: #E6007A;
+        --accent-cyan: #0077FF;
+        --accent-gold: #FF8800;
+        --text-main: #1A202C;
+        --text-muted: #5A687B;
+        
+        --panel-bg: rgba(255, 255, 255, 0.85);
+        --panel-blur: 10px;
+        --panel-border-color: rgba(0, 119, 255, 0.25);
+        --panel-border: 1px solid var(--panel-border-color);
+        --panel-hover-border-color: var(--accent-cyan);
+        --panel-hover-border: 1px solid var(--panel-hover-border-color);
+    }
+
+    /* --- [BASE_RESET] --- */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background-color: var(--bg-deep);
+        color: var(--text-main);
+        font-family: var(--font-mono);
+        overflow-x: hidden;
+        transition: background-color 0.5s ease, color 0.5s ease;
+    }
+
+    /* --- [CINEMATIC_BACKGROUND – ASTRA STYLE] --- */
+    #astra-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -2;
+        opacity: 0;
+        transition: opacity 2s ease-in;
+    }
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    /* Dark overlay + scanlines */
+    .video-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(to top, rgba(1, 4, 17, 0.9) 0%, rgba(1, 4, 17, 0.6) 60%, rgba(1, 4, 17, 0.9) 100%);
+        z-index: -1;
+        transition: opacity 0.5s ease;
+    }
+    .video-overlay::after {
+        content: ' ';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: linear-gradient(
+            rgba(18, 16, 16, 0) 50%,
+            rgba(0, 0, 0, 0.25) 50%
+        );
+        background-size: 100% 4px;
+        animation: scanlines 0.4s linear infinite;
+        opacity: 0.3;
+    }
     
-    <!-- three.js CDN for 3D animation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    @keyframes scanlines {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 4px; }
+    }
+
+    /* [CHANGED] Light mode static background */
+    .light-mode-bg {
+        position: fixed;
+        inset: 0;
+        background: var(--bg-deep); /* Simplified to a clean solid color */
+        z-index: -3;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
     
-    <style>
-        /* --- [SYSTEM_VARIABLES] --- */
-        :root {
-            /* DARK THEME (Default) */
-            --bg-deep: #010411;
-            --accent-pink: #F000B8;
-            --accent-cyan: #00E0FF;
-            --accent-gold: #FFD700;
-            --text-main: #E0EFFF;
-            --text-muted: #8899AB;
-            
-            --panel-bg: rgba(1, 4, 17, 0.75);
-            --panel-blur: 10px;
-            --panel-border-color: rgba(0, 224, 255, 0.3);
-            --panel-border: 1px solid var(--panel-border-color);
-            --panel-hover-border-color: var(--accent-cyan);
-            --panel-hover-border: 1px solid var(--panel-hover-border-color);
-            
-            --font-display: 'Chakra Petch', sans-serif;
-            --font-mono: 'Space Mono', monospace;
-            --panel-radius: 8px;
-        }
+    :root[data-theme="light"] #astra-canvas,
+    :root[data-theme="light"] .video-overlay {
+        opacity: 0 !important;
+        pointer-events: none;
+    }
+    :root[data-theme="light"] .light-mode-bg {
+        opacity: 1;
+    }
 
-        :root[data-theme="light"] {
-            /* LIGHT THEME */
-            --bg-deep: #f0f4f9;
-            --accent-pink: #d9006c;
-            --accent-cyan: #0056b3;
-            --accent-gold: #b38600;
-            --text-main: #122239;
-            --text-muted: #5a687b;
-            
-            --panel-bg: rgba(255, 255, 255, 0.7);
-            --panel-blur: 12px;
-            --panel-border-color: rgba(0, 86, 179, 0.2);
-            --panel-border: 1px solid var(--panel-border-color);
-            --panel-hover-border-color: var(--accent-cyan);
-            --panel-hover-border: 1px solid var(--panel-hover-border-color);
-        }
+    /* --- [LOADING_SCREEN] --- */
+    #loading-screen {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem;
+        transition: opacity 1.5s ease-out, visibility 1.5s;
+    }
+    :root[data-theme="light"] #loading-screen {
+        background: var(--bg-deep); /* Updated */
+    }
+    
+    .loading-title {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 700;
+        color: var(--accent-cyan);
+        letter-spacing: 2px;
+        text-shadow: 0 0 15px var(--accent-cyan);
+    }
+    .loading-subtitle {
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        color: var(--accent-gold);
+        margin: 0.5rem 0 1.5rem;
+        letter-spacing: 1px;
+    }
+    .loading-quote {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        color: var(--text-main);
+        max-width: 40ch;
+        margin-bottom: 2rem;
+    }
 
-        /* --- [BASE_RESET] --- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+    #loading-3d-canvas {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+    }
+    
+    .loading-status {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        height: 20px;
+    }
 
-        html {
-            scroll-behavior: smooth;
-        }
+    .jack-in-button {
+        display: none;
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        color: var(--accent-gold);
+        background: transparent;
+        border: 2px solid var(--accent-gold);
+        padding: 0.75rem 2rem;
+        margin-top: 1.5rem;
+        cursor: pointer;
+        text-shadow: 0 0 10px var(--accent-gold);
+        transition: all 0.3s ease;
+        animation: pulse 2s infinite;
+    }
+    .jack-in-button:hover {
+        background: rgba(255, 215, 0, 0.1);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+    :root[data-theme="light"] .jack-in-button:hover {
+        background: rgba(255, 136, 0, 0.1); /* Updated */
+        box-shadow: 0 0 20px rgba(255, 136, 0, 0.4); /* Updated */
+    }
 
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            font-family: var(--font-mono);
-            overflow-x: hidden;
-            transition: background-color 0.5s ease, color 0.5s ease;
+    /* --- [NEW] Sci-fi animations --- */
+    @keyframes pulse {
+        0% { opacity: 0.7; box-shadow: 0 0 10px var(--accent-gold); }
+        50% { opacity: 1; box-shadow: 0 0 20px var(--accent-gold); }
+        100% { opacity: 0.7; box-shadow: 0 0 10px var(--accent-gold); }
+    }
+    
+    @keyframes flicker-in {
+        0% { opacity: 0; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    @keyframes pulse-shadow-cyan {
+        0% { text-shadow: 0 0 10px var(--accent-cyan); }
+        50% { text-shadow: 0 0 20px var(--accent-cyan), 0 0 30px var(--accent-cyan); }
+        100% { text-shadow: 0 0 10px var(--accent-cyan); }
+    }
+    
+    @keyframes scan-line {
+        0% { transform: translateY(-100%); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(100%); opacity: 0; }
+    }
+    
+    /* [NEW] Keyframe for chat trigger button */
+    @keyframes jump-animation {
+        0%, 100% { 
+            transform: translateY(0); 
+            box-shadow: 0 0 20px var(--accent-cyan);
         }
+        50% { 
+            transform: translateY(-8px); 
+            box-shadow: 0 10px 30px var(--accent-cyan);
+        }
+    }
+    /* --- [END] Sci-fi animations --- */
+    
+    #main-app {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 1s ease-in;
+    }
 
-        /* --- [CINEMATIC_BACKGROUND – ASTRA STYLE] --- */
-        #astra-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -2;
-            opacity: 0;
-            transition: opacity 2s ease-in;
+    /* --- [GAME_HUD] --- */
+    .hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 10;
+        font-family: var(--font-display);
+        text-transform: uppercase;
+    }
+    
+    #hud-objective {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        color: var(--accent-gold);
+        font-size: 1.2rem;
+        text-shadow: 0 0 10px var(--accent-gold);
+        transition: color 0.5s ease, opacity 0.3s ease, visibility 0.3s ease;
+        /* [NEW] Animation */
+        animation: flicker-in 1.5s ease-out 1s both;
+    }
+    #hud-objective-text {
+        font-size: 0.9rem;
+        color: var(--text-main);
+        text-shadow: none;
+        transition: color 0.5s ease;
+    }
+
+    .hud-top-right {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        text-align: right;
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 1.25rem; /* Adjusted gap */
+        transition: color 0.5s ease;
+        /* [NEW] Animation */
+        animation: flicker-in 1s ease-out 0.5s both;
+    }
+    
+    /* [CHANGED] Chatbot Toggle Button - HIDDEN */
+    #hud-chat-toggle {
+        /* pointer-events: all;
+        cursor: pointer;
+        color: var(--accent-pink);
+        font-size: 1.4rem; 
+        transition: color 0.3s ease, transform 0.3s ease; */
+        display: none; /* [NEW] Hiding old toggle per user request */
+    }
+    /* #hud-chat-toggle:hover {
+        color: var(--accent-cyan);
+        transform: scale(1.1);
+    } */
+
+    #hud-sound-toggle {
+        pointer-events: all;
+        cursor: pointer;
+        color: var(--accent-cyan);
+        font-size: 1.5rem; /* Icon size */
+        transition: color 0.5s ease;
+    }
+    #hud-sound-toggle:hover {
+        color: var(--accent-pink);
+    }
+    
+    .theme-slider {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 50px;
+        height: 26px;
+        background-color: var(--bg-deep);
+        border: var(--panel-border);
+        border-radius: 100px;
+        padding: 4px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.5s ease, border-color 0.5s ease;
+        pointer-events: all;
+    }
+    .theme-slider .icon {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        z-index: 1;
+    }
+    .theme-slider .sun { color: #f39c12; }
+    .theme-slider .moon { color: #8b5cf6; }
+
+    .slider-knob {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        background-color: var(--text-main);
+        border-radius: 50%;
+        left: 3px;
+        transition: transform 0.3s ease, background-color 0.5s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .theme-slider input { display: none; }
+    .theme-slider input:checked + .slider-knob {
+        transform: translateX(24px);
+    }
+
+    /* --- [TOP NAVBAR] --- */
+    .top-nav {
+        position: absolute;
+        top: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 1.5rem;
+        padding: 0.5rem 1.25rem;
+        background: rgba(1, 4, 17, 0.8);
+        border-radius: 999px;
+        border: 1px solid rgba(0, 224, 255, 0.3);
+        backdrop-filter: blur(10px);
+        pointer-events: all;
+        /* [NEW] Animation */
+        animation: flicker-in 1s ease-out 0.8s both;
+    }
+    :root[data-theme="light"] .top-nav {
+        background: rgba(248, 249, 250, 0.85); /* Updated */
+        border-color: rgba(0, 119, 255, 0.25); /* Updated */
+    }
+    .top-nav a {
+        font-family: var(--font-display);
+        font-size: 0.85rem;
+        text-decoration: none;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        transition: color 0.3s ease, transform 0.2s ease;
+    }
+    .top-nav a:hover {
+        color: var(--accent-cyan);
+        transform: translateY(-1px);
+    }
+    .top-nav a.nav-primary {
+        color: var(--accent-gold);
+    }
+
+    #hud-minimap {
+        position: fixed; /* pinned to viewport bottom-left */
+        bottom: 24px;
+        left: 24px;
+        width: 180px;
+        height: 140px;
+        /* Use satellite image, keep cover */
+        background-image: url('image_d5253f.png');
+        background-size: cover;
+        background-position: center;
+        border: 2px solid var(--accent-cyan);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0 85%);
+        transition: background 0.5s ease, border-color 0.5s ease, opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+        animation: flicker-in 1.5s ease-out 1.2s both;
+        overflow: hidden; /* contain SVG */
+        z-index: 12;
+        pointer-events: all;
+    }
+    
+    /* [NEW] Map routes SVG */
+    .map-routes {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1; /* Below dots */
+    }
+    
+    .map-routes path {
+        animation: dash-animate 2s linear infinite;
+    }
+    
+    @keyframes dash-animate {
+        from {
+            stroke-dashoffset: 8;
         }
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+    /* [NEW] End Map routes */
+
+    .map-dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        pointer-events: all;
+        z-index: 2; /* [NEW] Ensure dots are above routes */
+    }
+    .map-dot:hover {
+        transform: scale(1.5);
+        background: var(--accent-gold);
+    }
+    .map-dot.active {
+        background: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-cyan);
+        animation: pulse 1s infinite;
+    }
+    #map-projects { top: 30%; left: 60%; }
+    #map-experience { top: 50%; left: 30%; }
+    #map-contact { top: 15%; left: 20%; }
+
+    /* --- [MAIN_CONTENT_WRAPPER] --- */
+    .main-wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 10vh 2rem 5rem;
+    }
+    
+    /* --- [DISTRICT_STYLING] --- */
+    .district {
+        padding-top: 5rem; /* For scroll-spy offset */
+        margin-bottom: 5rem;
+    }
+    
+    .district-title {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        border-bottom: 2px solid var(--accent-cyan);
+        padding-bottom: 0.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 0 0 10px var(--accent-cyan);
+        transition: color 0.5s ease, border-color 0.5s ease, text-shadow 0.5s ease;
+        /* [NEW] Animation */
+        animation: pulse-shadow-cyan 3s linear infinite;
+    }
+    .district-title span {
+        font-size: 1rem;
+        color: var(--text-muted);
+        letter-spacing: 2px;
+        display: block;
+        transition: color 0.5s ease;
+    }
+
+    .holo-panel {
+        background: var(--panel-bg);
+        border: var(--panel-border);
+        border-radius: var(--panel-radius);
+        backdrop-filter: var(--panel-blur);
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .holo-panel:hover {
+        border: var(--panel-hover-border);
+        box-shadow: 0 0 20px rgba(0, 224, 255, 0.2);
+        transform: translateY(-5px);
+    }
+    :root[data-theme="light"] .holo-panel:hover {
+        box-shadow: 0 5px 20px rgba(0, 119, 255, 0.15); /* Updated */
+    }
+    
+    .holo-panel::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+        transform: skewX(-25deg);
+        opacity: 0;
+        transition: left 0.6s ease;
+    }
+    :root[data-theme="light"] .holo-panel::before {
+        background: linear-gradient(to right, rgba(0, 119, 255,0) 0%, rgba(0, 119, 255,0.08) 50%, rgba(0, 119, 255,0) 100%); /* Updated */
+    }
+    .holo-panel:hover::before {
+        left: 125%;
+        opacity: 1;
+    }
+
+    /* [NEW] Scan line animation on hover */
+    .holo-panel::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-cyan);
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+    .holo-panel:hover::after {
+        animation: scan-line 1.5s ease-in-out infinite;
+    }
+
+
+    /* --- [HERO_SECTION] --- */
+    .hero-section {
+        padding-top: 10vh;
+        min-height: 80vh;
+        display: flex; /* [CHANGED] Kept flex */
+        align-items: center; /* [CHANGED] To vertically center content */
+        justify-content: center;
+    }
+    .hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 1rem;
+        line-height: 1.1;
+    }
+    .hero-title span {
+        color: var(--accent-cyan);
+        text-shadow: 0 0 15px var(--accent-cyan);
+    }
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        max-width: 50ch;
+    }
+
+    /* [NEW] Hero layout styles */
+    .hero-content-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 3rem;
+        width: 100%;
+    }
+    .hero-text {
+        flex: 1;
+        max-width: 60ch;
+    }
+    .hero-image-container {
+        flex-shrink: 0;
+        position: relative;
+    }
+    .hero-photo {
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--accent-cyan);
+        /* Dark mode default glow */
+        box-shadow: 0 0 25px rgba(0, 224, 255, 0.5), 0 0 40px var(--accent-cyan);
+        filter: grayscale(20%) contrast(110%); /* Subtle filter to blend in */
+        transition: all 0.5s ease;
+        background-color: transparent; /* Ensure the image container is transparent */
+        display: block;
+    }
+    .hero-photo:hover {
+        transform: scale(1.03);
+        /* Dark mode hover glow */
+        box-shadow: 0 0 35px rgba(0, 224, 255, 0.7), 0 0 50px var(--accent-cyan);
+    }
+    
+    /* [NEW] Light mode hero photo */
+    :root[data-theme="light"] .hero-photo {
+        box-shadow: 0 0 25px rgba(0, 119, 255, 0.4), 0 0 40px var(--accent-cyan);
+        filter: grayscale(0%) contrast(100%); /* Remove filter in light mode */
+    }
+     :root[data-theme="light"] .hero-photo:hover {
+        box-shadow: 0 0 35px rgba(0, 119, 255, 0.6), 0 0 50px var(--accent-cyan);
+    }
+
+    /* --- [PROJECTS_DISTRICT] --- */
+    .project-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* [CHANGED] Increased min width */
+        gap: 1.5rem;
+    }
+    
+    /* [MODIFIED] Original .project-panel styling */
+    .project-panel {
+        /* This is now just a layout container for the flipper */
+        /* height: 100%; */ /* [REMOVED] Let content define height */
+        /* Kept margin from .holo-panel */
+        margin-bottom: 1.5rem;
+    }
+    
+    /* [NEW] Override holo-panel for 3D flip container */
+    .project-panel.holo-panel {
+        background: transparent;
+        border: none;
+        backdrop-filter: none;
+        padding: 0;
+        overflow: visible; /* Was hidden, needs to be visible for 3D */
+        perspective: 1000px;
+        /* Remove transform from .holo-panel:hover */
+        transition: margin-bottom 0.3s ease; 
+    }
+    .project-panel.holo-panel:hover {
+        border: none;
+        box-shadow: none;
+        transform: none;
+    }
+    .project-panel.holo-panel::before {
+         display: none; /* Disable the shine on the container */
+    }
+    /* [NEW] Disable scan line on the *flipper* container, but not the faces */
+    .project-panel.holo-panel::after {
+        display: none;
+    }
+    
+    /* [NEW] Flip card mechanics */
+    .project-flipper {
+        position: relative;
+        width: 100%;
+        height: 100%; /* [FIXED] Ensure flipper fills the grid item height */
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+    }
+    .project-panel.is-flipped .project-flipper {
+        transform: rotateY(180deg);
+    }
+
+    .project-face {
+        /* This is where the .holo-panel styles are re-applied */
+        background: var(--panel-bg);
+        border: var(--panel-border);
+        border-radius: var(--panel-radius);
+        backdrop-filter: var(--panel-blur);
+        padding: 1.5rem 2rem;
+        transition: all 0.3s ease;
+        /* position: absolute; */ /* [REMOVED] Handled by front/back classes */
+        /* top: 0; */ /* [REMOVED] */
+        /* left: 0; */ /* [REMOVED] */
+        width: 100%;
+        height: 100%; /* [FIXED] Ensure face fills the flipper height */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        overflow: hidden;
+        /* Re-apply flex from original .project-panel */
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* [NEW] Re-apply hover and shine effects to the faces */
+    .project-face:hover {
+        border: var(--panel-hover-border);
+        box-shadow: 0 0 20px rgba(0, 224, 255, 0.2);
+    }
+    :root[data-theme="light"] .project-face:hover {
+        box-shadow: 0 5px 20px rgba(0, 119, 255, 0.15);
+    }
+    .project-face::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+        transform: skewX(-25deg);
+        opacity: 0;
+        transition: left 0.6s ease;
+    }
+    :root[data-theme="light"] .project-face::before {
+        background: linear-gradient(to right, rgba(0, 119, 255,0) 0%, rgba(0, 119, 255,0.08) 50%, rgba(0, 119, 255,0) 100%);
+    }
+    .project-face:hover::before {
+        left: 125%;
+        opacity: 1;
+    }
+    
+    /* [NEW] Add scan line to project faces */
+    .project-face::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-cyan);
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+    .project-face:hover::after {
+        animation: scan-line 1.5s ease-in-out infinite;
+    }
+
+    .project-front {
+        position: relative; /* [CHANGED] This face dictates the height */
+        z-index: 2; 
+    }
+
+    .project-back {
+        position: absolute; /* [ADDED] This face fills the flipper */
+        top: 0; /* [ADDED] */
+        left: 0; /* [ADDED] */
+        height: 100%; /* [ADDED] Fill the height set by the front face */
+        transform: rotateY(180deg);
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    /* End of new flip styles */
+
+    .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.25rem;
+        gap: 1rem; /* Added gap */
+    }
+    .project-title {
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        color: var(--accent-pink);
+        margin-bottom: 0;
+    }
+    .project-tag {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+    /* [NEW] Style for live demo links */
+    .live-demo {
+        font-family: var(--font-display);
+        font-size: 0.9rem;
+        color: var(--accent-gold);
+        text-decoration: none;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+    }
+    .live-demo:hover {
+        color: var(--accent-cyan);
+        text-shadow: 0 0 10px var(--accent-cyan);
+    }
+    .project-desc {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin: 0.75rem 0;
+        flex-grow: 1;
+    }
+    .project-list {
+        list-style: none;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+    }
+    .project-list li {
+        position: relative;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    .project-list li::before {
+        content: '▸';
+        position: absolute;
+        left: -1rem;
+        color: var(--accent-cyan);
+    }
+    .project-tech {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        border-top: 1px solid var(--panel-border-color);
+        padding-top: 1rem;
+        margin-top: auto;
+        word-spacing: 2px;
+    }
+    .project-tech strong {
+        color: var(--accent-cyan);
+    }
+
+    /* --- [AI ANALYSIS BUTTON] --- */
+    .project-analysis {
+        margin-top: 1.5rem;
+        border-top: 1px dashed var(--panel-border-color);
+        padding-top: 1rem;
+    }
+    .analysis-button {
+        font-family: var(--font-display);
+        font-size: 1rem;
+        color: var(--accent-gold);
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid var(--accent-gold);
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    .analysis-button:hover {
+        background: rgba(255, 215, 0, 0.2);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        color: #fff;
+    }
+    :root[data-theme="light"] .analysis-button {
+        background: rgba(255, 136, 0, 0.1); /* Updated */
+        border-color: var(--accent-gold);
+    }
+    :root[data-theme="light"] .analysis-button:hover {
+        background: rgba(255, 136, 0, 0.2); /* Updated */
+        box-shadow: 0 0 15px rgba(255, 136, 0, 0.3); /* Updated */
+        color: var(--accent-gold);
+    }
+
+    /* --- [CAREER_EVENT_LOG] --- */
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+        border-left: 2px solid var(--panel-border-color);
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 0; /* Panels provide margin */
+    }
+    .timeline-item::before { /* Timeline Dot */
+        content: '';
+        position: absolute;
+        left: -2.5rem; /* 2rem padding + half of 14px dot + 3px border */
+        top: 2.1rem;
+        width: 14px;
+        height: 14px;
+        background: var(--bg-deep);
+        border: 3px solid var(--accent-cyan);
+        border-radius: 50%;
+        z-index: 1;
+        box-shadow: 0 0 10px var(--accent-cyan);
+        transition: background-color 0.5s ease;
+    }
+    .timeline-item h3 { /* Role Title */
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        color: var(--accent-pink);
+        margin-bottom: 0;
+    }
+    .timeline-item h4 { /* Company */
+        font-size: 1rem;
+        color: var(--accent-cyan);
+        margin-bottom: 0.5rem;
+    }
+    .timeline-item .date {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .timeline-item ul {
+        list-style: none;
+        padding-left: 1rem;
+        margin-top: 1rem;
+    }
+    .timeline-item ul li {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        position: relative;
+    }
+    .timeline-item ul li::before {
+        content: '▸';
+        position: absolute;
+        left: -1rem;
+        color: var(--accent-cyan);
+    }
+
+    /* --- [SECURE_UPLINK] --- */
+    .terminal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+    .terminal-button {
+        background: var(--panel-bg);
+        border: var(--panel-border);
+        border-radius: var(--panel-radius);
+        backdrop-filter: var(--panel-blur);
+        padding: 2rem;
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        color: var(--text-main);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+        /* [NEW] Add overflow hidden for scan line */
+        overflow: hidden;
+        /* [NEW] Added flex properties for icons */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* [NEW] Icon styling for terminal buttons */
+    .terminal-button svg {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 1rem;
+        color: var(--accent-cyan);
+        transition: color 0.3s ease, transform 0.3s ease;
+    }
+    .terminal-button:hover svg {
+        transform: scale(1.1);
+    }
+
+    .terminal-button:hover {
+        background: rgba(0, 224, 255, 0.1);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        transform: translateY(-5px);
+        box-shadow: 0 0 20px rgba(0, 224, 255, 0.2);
+    }
+    :root[data-theme="light"] .terminal-button:hover {
+        background: rgba(0, 119, 255, 0.1); /* Updated */
+        box-shadow: 0 5px 20px rgba(0, 119, 255, 0.15); /* Updated */
+    }
+    .terminal-button span {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    /* [NEW] Scan line for terminal buttons */
+    .terminal-button::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-cyan);
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+    .terminal-button:hover::after {
+        animation: scan-line 1.5s ease-in-out infinite;
+    }
+
+
+    /* --- [DEBUG_TERMINAL_EASTER_EGG] --- */
+    #debug-terminal {
+        position: fixed;
+        inset: 0;
+        background: rgba(1, 4, 17, 0.95);
+        z-index: 90;
+        display: none;
+        flex-direction: column;
+        padding: 2rem;
+        font-family: var(--font-mono);
+        backdrop-filter: blur(10px);
+    }
+    :root[data-theme="light"] #debug-terminal {
+         background: rgba(248, 249, 250, 0.95); /* Updated */
+    }
+    
+    #debug-output {
+        flex-grow: 1;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        color: var(--accent-pink);
+    }
+    .debug-input-line {
+        display: flex;
+        align-items: center;
+        color: var(--accent-cyan);
+    }
+    #debug-input {
+        flex-grow: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--accent-cyan);
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        padding-left: 0.5rem;
+    }
+    :root[data-theme="light"] #debug-input {
+         color: var(--accent-cyan);
+    }
+    
+    /* --- [MODAL_STYLING] (Shared by Gemini & Chatbot) --- */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(1, 4, 17, 0.5);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    :root[data-theme="light"] .modal-overlay {
+        background: rgba(248, 249, 250, 0.5); /* Updated */
+    }
+    .modal-overlay.modal-visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .modal-panel {
+        background: var(--bg-deep);
+        border: var(--panel-hover-border);
+        border-radius: var(--panel-radius);
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        padding: 2rem;
+        position: relative;
+        box-shadow: 0 0 30px rgba(0, 224, 255, 0.3);
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    :root[data-theme="light"] .modal-panel {
+         box-shadow: 0 10px 30px rgba(0, 119, 255, 0.2); /* Updated */
+    }
+    .modal-overlay.modal-visible .modal-panel {
+        transform: scale(1);
+    }
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1.5rem;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+    .modal-close:hover {
+        color: var(--accent-pink);
+    }
+    .modal-title {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        color: var(--accent-cyan);
+        margin-bottom: 1.5rem;
+        padding-right: 2rem;
+    }
+    .modal-content {
+        flex-grow: 1;
+        overflow-y: auto;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        color: var(--text-main);
+        /* Custom scrollbar for webkit */
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-cyan) transparent;
+    }
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+    .modal-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .modal-content::-webkit-scrollbar-thumb {
+        background-color: var(--accent-cyan);
+        border-radius: 3px;
+    }
+    
+    .loader {
+        width: 50px;
+        height: 50px;
+        border: 5px solid var(--panel-border-color);
+        border-top-color: var(--accent-cyan);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 2rem auto;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* --- [NEW] ROBOT_CHAT_ASSISTANT --- */
+    
+    /* [NEW] CHAT TRIGGER BUTTON */
+    .chat-trigger {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background-color: var(--accent-cyan);
+        color: var(--bg-deep);
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 0.75rem 1.25rem;
+        border-radius: 999px;
+        cursor: pointer;
+        border: none;
+        animation: jump-animation 1.5s ease-in-out infinite;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .chat-trigger:hover {
+        transform: scale(1.05);
+        animation-play-state: paused;
+    }
+    .chat-trigger-icon {
+        display: grid;
+        place-items: center;
+    }
+    .chat-trigger-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    :root[data-theme="light"] .chat-trigger {
+        color: #fff;
+        box-shadow: 0 0 20px var(--accent-cyan);
+    }
+    :root[data-theme="light"] .chat-trigger:hover {
+        box-shadow: 0 5px 30px var(--accent-cyan);
+    }
+
+    #robot-chat-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        display: flex;
+        align-items: flex-end;
         
-        /* Dark overlay + scanlines */
-        .video-overlay {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(to top, rgba(1, 4, 17, 0.9) 0%, rgba(1, 4, 17, 0.6) 60%, rgba(1, 4, 17, 0.9) 100%);
-            z-index: -1;
-            transition: opacity 0.5s ease;
-        }
-        .video-overlay::after {
-            content: ' ';
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background-image: linear-gradient(
-                rgba(18, 16, 16, 0) 50%,
-                rgba(0, 0, 0, 0.25) 50%
-            );
-            background-size: 100% 4px;
-            animation: scanlines 0.4s linear infinite;
-            opacity: 0.3;
-        }
+        /* Animation styles */
+        opacity: 0;
+        visibility: hidden;
+        /* [CHANGED] Animate from bottom-right */
+        transform: translateY(100px) scale(0.8);
+        transform-origin: bottom right;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, visibility 0.4s;
+    }
+    #robot-chat-container.modal-visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(0, 0) scale(1);
+    }
+
+    #robot-avatar {
+        width: 150px;
+        height: auto;
+        margin-right: -25px; /* Overlap the panel */
+        margin-bottom: -10px; /* Sit a bit lower */
+        z-index: 1;
+        filter: drop-shadow(0 0 10px var(--accent-cyan));
+        animation: robot-bob 5s ease-in-out infinite;
+    }
+    
+    @keyframes robot-bob {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* Override modal-panel styles for this specific context */
+    #robot-chat-panel {
+        width: 380px;
+        height: 500px;
+        z-index: 2; /* In front of avatar */
+        /* Most other styles (padding, display:flex, etc.) are inherited from .modal-panel */
+        max-width: 380px; /* Override modal-panel max-width */
+    }
+    
+      /* Rename chat-specific IDs
+          These elements intentionally use the shared `.modal-close` and
+          `.modal-title` styles defined above — no overrides required here. */
+    
+    #robot-chat-messages {
+        /* Re-using .modal-content */
+        flex-grow: 1;
+        overflow-y: auto;
+        color: var(--text-main);
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-cyan) transparent;
         
-        @keyframes scanlines {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 4px; }
-        }
+        /* Re-using #chatbot-messages */
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding-right: 0.5rem; 
+    }
+    #robot-chat-messages::-webkit-scrollbar { width: 6px; }
+    #robot-chat-messages::-webkit-scrollbar-track { background: transparent; }
+    #robot-chat-messages::-webkit-scrollbar-thumb {
+        background-color: var(--accent-cyan);
+        border-radius: 3px;
+    }
+    
+    /* --- [NEW] CHATBOT_MODAL_STYLES (Renamed) --- */
+    .chat-message {
+        padding: 0.75rem 1rem;
+        border-radius: var(--panel-radius);
+        max-width: 85%;
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+    .chat-message.bot {
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border-color);
+        color: var(--text-main);
+        align-self: flex-start;
+    }
+    .chat-message.user {
+        background-color: var(--accent-cyan);
+        color: var(--bg-deep);
+        align-self: flex-end;
+    }
+    :root[data-theme="light"] .chat-message.user {
+        color: #fff;
+    }
+    
+    #robot-chat-input-container {
+        display: flex;
+        margin-top: 1.5rem;
+        border-top: 1px solid var(--panel-border-color);
+        padding-top: 1.5rem;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    #robot-chat-input {
+        flex-grow: 1;
+        background: var(--panel-bg);
+        border: var(--panel-border);
+        border-radius: var(--panel-radius);
+        padding: 0.75rem 1rem;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        color: var(--text-main);
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
+    #robot-chat-input:focus {
+        border-color: var(--accent-cyan);
+    }
+    
+    .chat-button {
+        flex-shrink: 0;
+        width: 50px;
+        height: 50px;
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        border: var(--panel-border);
+        border-radius: var(--panel-radius);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .chat-button svg {
+        width: 20px;
+        height: 20px;
+        display: block;
+    }
+    #robot-chat-mic {
+        background: var(--panel-bg);
+        color: var(--accent-pink);
+    }
+    #robot-chat-mic:hover {
+        border-color: var(--accent-pink);
+        color: var(--accent-pink);
+    }
+    #robot-chat-mic.recording {
+        background: var(--accent-pink);
+        color: var(--bg-deep);
+        animation: pulse 1s infinite;
+    }
+    #robot-chat-send {
+        background: var(--accent-cyan);
+        color: var(--bg-deep);
+    }
+    :root[data-theme="light"] #robot-chat-send {
+        color: #2ce1f5;
+    }
+    #robot-chat-send:hover {
+        opacity: 0.8;
+    }
+    /* Muted state for the assistant speaker button */
+    #robot-chat-speaker[aria-pressed="true"] {
+        background: var(--panel-bg);
+        color: var(--accent-pink);
+        opacity: 0.6;
+        filter: grayscale(0.35);
+    }
+    /* Speaker (ON) - keep background transparent to match panel */
+    #robot-chat-speaker {
+        background: transparent;
+        color: var(--accent-cyan);
+        border: var(--panel-border);
+    }
+    #robot-chat-speaker:hover {
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+    }
+    /* Top controls container for speaker (placed inside chat panel) */
+    .robot-chat-top-controls {
+        position: absolute;
+        top: 0.8rem;
+        right: 6.6rem; /* leave space for the close button */
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        z-index: 3;
+    }
+    @media (max-width: 100px) {
+        .robot-chat-top-controls { right: 1rem; top: 0.6rem; }
+    }
+    
+    /* --- [NEW] SCROLL_REVEAL_ANIMATIONS --- */
+    .reveal-fade-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        will-change: opacity, transform;
+    }
+    .reveal-fade-up.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
 
-        /* Light mode static background */
-        .light-mode-bg {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(180deg, #d4e7ff 0%, #f5f9ff 100%);
-            z-index: -3;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        
-        :root[data-theme="light"] #astra-canvas,
-        :root[data-theme="light"] .video-overlay {
-            opacity: 0 !important;
-            pointer-events: none;
-        }
-        :root[data-theme="light"] .light-mode-bg {
-            opacity: 1;
-        }
 
-        /* --- [LOADING_SCREEN] --- */
-        #loading-screen {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            text-align: center;
-            padding: 2rem;
-            transition: opacity 1.5s ease-out, visibility 1.5s;
-        }
-        :root[data-theme="light"] #loading-screen {
-            background: #f0f4f9;
-        }
-        
-        .loading-title {
-            font-family: var(--font-display);
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 700;
-            color: var(--accent-cyan);
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px var(--accent-cyan);
-        }
-        .loading-subtitle {
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            color: var(--accent-gold);
-            margin: 0.5rem 0 1.5rem;
-            letter-spacing: 1px;
-        }
-        .loading-quote {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            color: var(--text-main);
-            max-width: 40ch;
-            margin-bottom: 2rem;
-        }
-
-        /* 3D Canvas Style (loader) */
-        #loading-3d-canvas {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 1rem;
-            opacity: 0.8;
-        }
-        
-        .loading-status {
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            height: 20px;
-        }
-
-        .jack-in-button {
-            display: none;
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--accent-gold);
-            background: transparent;
-            border: 2px solid var(--accent-gold);
-            padding: 0.75rem 2rem;
-            margin-top: 1.5rem;
-            cursor: pointer;
-            text-shadow: 0 0 10px var(--accent-gold);
-            transition: all 0.3s ease;
-            animation: pulse 2s infinite;
-        }
-        .jack-in-button:hover {
-            background: rgba(255, 215, 0, 0.1);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-        }
-        :root[data-theme="light"] .jack-in-button:hover {
-            background: rgba(179, 134, 0, 0.1);
-            box-shadow: 0 0 20px rgba(179, 134, 0, 0.5);
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            50% { opacity: 1; }
-            100% { opacity: 0.7; }
-        }
-        
-        #main-app {
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 1s ease-in;
-        }
-
-        /* --- [GAME_HUD] --- */
+    /* --- [RESPONSIVENESS] --- */
+    @media (max-width: 900px) {
         .hud {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 10;
-            font-family: var(--font-display);
-            text-transform: uppercase;
-        }
-        
-        /* Objective */
-        #hud-objective {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            color: var(--accent-gold);
-            font-size: 1.2rem;
-            text-shadow: 0 0 10px var(--accent-gold);
-            transition: color 0.5s ease;
-        }
-        #hud-objective-text {
-            font-size: 0.9rem;
-            color: var(--text-main);
-            text-shadow: none;
-            transition: color 0.5s ease;
-        }
-
-        /* Top Right Controls */
-        .hud-top-right {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            text-align: right;
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            transition: color 0.5s ease;
-        }
-        #hud-sound-toggle {
-            pointer-events: all;
-            cursor: pointer;
-            color: var(--accent-cyan);
-            font-size: 1.5rem; /* Icon size */
-            transition: color 0.5s ease;
-        }
-        #hud-sound-toggle:hover {
-            color: var(--accent-pink);
-        }
-        
-        /* Theme Slider */
-        .theme-slider {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 50px;
-            height: 26px;
-            background-color: var(--bg-deep);
-            border: var(--panel-border);
-            border-radius: 100px;
-            padding: 4px;
-            position: relative;
-            cursor: pointer;
-            transition: background-color 0.5s ease, border-color 0.5s ease;
-            pointer-events: all;
-        }
-        .theme-slider .icon {
             font-size: 0.8rem;
-            color: var(--text-muted);
-            z-index: 1;
         }
-        .theme-slider .sun { color: #f39c12; }
-        .theme-slider .moon { color: #8b5cf6; }
-
-        .slider-knob {
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background-color: var(--text-main);
-            border-radius: 50%;
-            left: 3px;
-            transition: transform 0.3s ease, background-color 0.5s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .theme-slider input { display: none; }
-        .theme-slider input:checked + .slider-knob {
-            transform: translateX(24px);
-        }
-
-        /* --- [TOP NAVBAR] --- */
-        .top-nav {
-            position: absolute;
-            top: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 1.5rem;
-            padding: 0.5rem 1.25rem;
-            background: rgba(1, 4, 17, 0.8);
-            border-radius: 999px;
-            border: 1px solid rgba(0, 224, 255, 0.3);
-            backdrop-filter: blur(10px);
-            pointer-events: all;
-        }
-        :root[data-theme="light"] .top-nav {
-            background: rgba(240, 244, 249, 0.85);
-            border-color: rgba(0, 86, 179, 0.2);
-        }
-        .top-nav a {
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            text-decoration: none;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            transition: color 0.3s ease, transform 0.2s ease;
-        }
-        .top-nav a:hover {
-            color: var(--accent-cyan);
-            transform: translateY(-1px);
-        }
-        .top-nav a.nav-primary {
-            color: var(--accent-gold);
-        }
-
-        /* Minimap */
-        #hud-minimap {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 180px;
-            height: 140px;
-            background: var(--panel-bg);
-            border: 2px solid var(--accent-cyan);
-            backdrop-filter: var(--panel-blur);
-            clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0 85%);
-            transition: background 0.5s ease, border-color 0.5s ease;
-        }
-        .map-dot {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            pointer-events: all;
-        }
-        .map-dot:hover {
-            transform: scale(1.5);
-            background: var(--accent-gold);
-        }
-        .map-dot.active {
-            background: var(--accent-cyan);
-            box-shadow: 0 0 10px var(--accent-cyan);
-            animation: pulse 1s infinite;
-        }
-        #map-projects { top: 30%; left: 60%; }
-        #map-experience { top: 50%; left: 30%; }
-        #map-contact { top: 15%; left: 20%; }
-
-        /* --- [MAIN_CONTENT_WRAPPER] --- */
-        .main-wrapper {
-            position: relative;
-            z-index: 1;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 10vh 2rem 5rem;
-        }
-        
-        /* --- [DISTRICT_STYLING] --- */
-        .district {
-            padding-top: 5rem; /* For scroll-spy offset */
-            margin-bottom: 5rem;
-        }
-        
-        .district-title {
-            font-family: var(--font-display);
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            border-bottom: 2px solid var(--accent-cyan);
-            padding-bottom: 0.5rem;
-            margin-bottom: 2rem;
-            text-shadow: 0 0 10px var(--accent-cyan);
-            transition: color 0.5s ease, border-color 0.5s ease, text-shadow 0.5s ease;
-        }
-        .district-title span {
-            font-size: 1rem;
-            color: var(--text-muted);
-            letter-spacing: 2px;
-            display: block;
-            transition: color 0.5s ease;
-        }
-
-        /* Holographic Panel */
-        .holo-panel {
-            background: var(--panel-bg);
-            border: var(--panel-border);
-            border-radius: var(--panel-radius);
-            backdrop-filter: var(--panel-blur);
-            padding: 1.5rem 2rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .holo-panel:hover {
-            border: var(--panel-hover-border);
-            box-shadow: 0 0 20px rgba(0, 224, 255, 0.2);
-            transform: translateY(-5px);
-        }
-        :root[data-theme="light"] .holo-panel:hover {
-            box-shadow: 0 5px 20px rgba(0, 86, 179, 0.15);
-        }
-        
-        .holo-panel::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -75%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
-            transform: skewX(-25deg);
+        /* [CHANGED] Hide non-essential HUD elements on tablets (keep minimap visible)
+           Only hide the objective text to preserve the minimap on smaller screens */
+        #hud-objective {
             opacity: 0;
-            transition: left 0.6s ease;
+            visibility: hidden;
         }
-        :root[data-theme="light"] .holo-panel::before {
-            background: linear-gradient(to right, rgba(0, 86, 179,0) 0%, rgba(0, 86, 179,0.08) 50%, rgba(0, 86, 179,0) 100%);
+        .hud-top-right {
+            transform-origin: top right;
+            gap: 1rem; /* Tighter gap */
         }
-        .holo-panel:hover::before {
-            left: 125%;
-            opacity: 1;
+        .top-nav {
+            transform: translateX(-50%) scale(0.9);
         }
 
-        /* --- [HERO_SECTION] --- */
+        /* [NEW] Hero responsive */
         .hero-section {
-            padding-top: 10vh;
-            min-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            padding-top: 5vh; /* Reduce top padding */
+            min-height: 70vh;
+            text-align: center; /* Center text for stacked layout */
+        }
+        .hero-content-wrapper {
+            flex-direction: column-reverse; /* Stack: image on top, text below */
+            gap: 2rem;
+        }
+        .hero-text {
+            max-width: 100%;
         }
         .hero-title {
-            font-family: var(--font-display);
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 1rem;
-            line-height: 1.1;
-        }
-        .hero-title span {
-            color: var(--accent-cyan);
-            text-shadow: 0 0 15px var(--accent-cyan);
+            font-size: clamp(2.2rem, 10vw, 3rem); /* Adjust hero title size for mobile */
         }
         .hero-subtitle {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            max-width: 50ch;
+            max-width: 100%; /* Allow subtitle to fill width */
+        }
+        .hero-photo {
+            width: 220px;
+            height: 220px;
+        }
+    }
+    @media (max-width: 800px) { /* [NEW] Breakpoint for grid */
+         .project-grid {
+            /* Go to single column sooner */
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 600px) {
+        .district-title {
+            font-size: 2rem;
+        }
+        .main-wrapper {
+            padding: 10vh 1rem 5rem;
+        }
+        .holo-panel {
+            padding: 1.5rem;
+        }
+        /* [NEW] Apply mobile padding to project faces */
+        .project-face {
+            padding: 1.5rem;
         }
 
-        /* --- [PROJECTS_DISTRICT] --- */
-        .project-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-            gap: 1.5rem;
+        /* [NEW] Smaller hero photo on mobile */
+        .hero-photo {
+            width: 180px;
+            height: 180px;
         }
-        .project-panel {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+        
+        /* [CHANGED] Make top controls more accessible */
+        .hud-top-right {
+            top: 15px;
+            right: 15px;
+            gap: 0.75rem;
         }
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.25rem;
+        .top-nav {
+            gap: 0.8rem;
+            padding: 0.4rem 0.9rem;
+            top: 15px;
         }
-        .project-title {
-            font-family: var(--font-display);
-            font-size: 1.3rem;
-            color: var(--accent-pink);
-            margin-bottom: 0;
+        .top-nav a {
+            font-size: 0.7rem;
         }
-        .project-tag {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-            margin-left: 1rem;
-        }
-        .project-desc {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin: 0.75rem 0;
-            flex-grow: 1;
-        }
-        .project-list {
-            list-style: none;
-            padding-left: 1rem;
-            margin-bottom: 1rem;
-        }
-        .project-list li {
-            position: relative;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-        .project-list li::before {
-            content: '▸';
-            position: absolute;
-            left: -1rem;
-            color: var(--accent-cyan);
-        }
-        .project-tech {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            border-top: 1px solid var(--panel-border-color);
-            padding-top: 1rem;
-            margin-top: auto;
-            word-spacing: 2px;
-        }
-        .project-tech strong {
-            color: var(--accent-cyan);
-        }
-        .live-demo {
-            color: var(--accent-gold);
-            font-weight: 700;
-            text-decoration: none;
-        }
-        .live-demo:hover {
-            text-decoration: underline;
-        }
-
-        /* --- [AI ANALYSIS BUTTON] --- */
-        .project-analysis {
-            margin-top: 1.5rem;
-            border-top: 1px dashed var(--panel-border-color);
-            padding-top: 1rem;
-        }
-        .analysis-button {
-            font-family: var(--font-display);
-            font-size: 1rem;
-            color: var(--accent-gold);
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid var(--accent-gold);
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-        .analysis-button:hover {
-            background: rgba(255, 215, 0, 0.2);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-            color: #fff;
-        }
-        :root[data-theme="light"] .analysis-button {
-            background: rgba(179, 134, 0, 0.1);
-            border-color: var(--accent-gold);
-        }
-        :root[data-theme="light"] .analysis-button:hover {
-            background: rgba(179, 134, 0, 0.2);
-            box-shadow: 0 0 15px rgba(179, 134, 0, 0.3);
-            color: var(--accent-gold);
-        }
-
-        /* --- [CAREER_EVENT_LOG] --- */
+        
+        /* [NEW] Mobile timeline fix */
         .timeline {
-            position: relative;
-            padding-left: 2rem;
-            border-left: 2px solid var(--panel-border-color);
+            padding-left: 1.5rem;
         }
-        .timeline-item {
-            position: relative;
-            margin-bottom: 0; /* Panels provide margin */
-        }
-        .timeline-item::before { /* Timeline Dot */
-            content: '';
-            position: absolute;
-            left: -2.5rem;
-            top: 2.1rem;
-            width: 14px;
-            height: 14px;
-            background: var(--bg-deep);
-            border: 3px solid var(--accent-cyan);
-            border-radius: 50%;
-            z-index: 1;
-            box-shadow: 0 0 10px var(--accent-cyan);
-            transition: background-color 0.5s ease;
-        }
-        .timeline-item h3 { /* Role Title */
-            font-family: var(--font-display);
-            font-size: 1.4rem;
-            color: var(--accent-pink);
-            margin-bottom: 0;
-        }
-        .timeline-item h4 { /* Company */
-            font-size: 1rem;
-            color: var(--accent-cyan);
-            margin-bottom: 0.5rem;
-        }
-        .timeline-item .date {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-        .timeline-item ul {
-            list-style: none;
-            padding-left: 1rem;
-            margin-top: 1rem;
-        }
-        .timeline-item ul li {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            position: relative;
-        }
-        .timeline-item ul li::before {
-            content: '▸';
-            position: absolute;
-            left: -1rem;
-            color: var(--accent-cyan);
-        }
-
-        /* --- [SECURE_UPLINK] --- */
-        .terminal-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-        .terminal-button {
-            background: var(--panel-bg);
-            border: var(--panel-border);
-            border-radius: var(--panel-radius);
-            backdrop-filter: var(--panel-blur);
-            padding: 2rem;
-            text-align: center;
-            font-family: var(--font-display);
-            font-size: 1.2rem;
-            color: var(--text-main);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .terminal-button:hover {
-            background: rgba(0, 224, 255, 0.1);
-            border-color: var(--accent-cyan);
-            color: var(--accent-cyan);
-            transform: translateY(-5px);
-            box-shadow: 0 0 20px rgba(0, 224, 255, 0.2);
-        }
-        :root[data-theme="light"] .terminal-button:hover {
-            background: rgba(0, 86, 179, 0.1);
-            box-shadow: 0 5px 20px rgba(0, 86, 179, 0.15);
-        }
-        .terminal-button span {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-        }
-
-        /* --- [DEBUG_TERMINAL_EASTER_EGG] --- */
-        #debug-terminal {
-            position: fixed;
-            inset: 0;
-            background: rgba(1, 4, 17, 0.95);
-            z-index: 90;
-            display: none;
-            flex-direction: column;
-            padding: 2rem;
-            font-family: var(--font-mono);
-            backdrop-filter: blur(10px);
-        }
-        :root[data-theme="light"] #debug-terminal {
-             background: rgba(240, 244, 249, 0.95);
+        .timeline-item::before {
+            left: -2.1rem; /* 1.5rem padding + 0.35rem (half dot) + 0.3rem (border) */
+            width: 10px;
+            height: 10px;
+            border-width: 2px;
         }
         
-        #debug-output {
-            flex-grow: 1;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            color: var(--accent-pink);
-        }
-        .debug-input-line {
-            display: flex;
-            align-items: center;
-            color: var(--accent-cyan);
-        }
-        #debug-input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--accent-cyan);
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            padding-left: 0.5rem;
-        }
-        :root[data-theme="light"] #debug-input {
-             color: var(--accent-cyan);
+        /* [NEW] Mobile modal padding */
+        .modal-panel, #robot-chat-panel { /* Added robot panel */
+            padding: 1.5rem;
+            max-height: 90vh;
         }
 
-        /* --- [AI ANALYSIS MODAL STYLES] --- */
-        #gemini-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(1, 4, 17, 0.5);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+        /* [NEW] Robot chat mobile layout */
+        #robot-chat-container {
+            bottom: 10px;
+            right: 10px;
+            left: 10px;
+            width: auto;
+            /* Reset animation origin for mobile */
+            transform-origin: bottom center; 
+            transform: translateY(100%) scale(0.8);
         }
-        :root[data-theme="light"] #gemini-modal-overlay {
-            background: rgba(240, 244, 249, 0.5);
+        #robot-chat-container.modal-visible {
+                transform: translateY(0) scale(1);
         }
-        #gemini-modal-overlay.modal-visible {
-            opacity: 1;
-            visibility: visible;
+        #robot-avatar {
+            display: none; /* Hide avatar on mobile */
         }
-        #gemini-modal-panel {
-            background: var(--bg-deep);
-            border: var(--panel-hover-border);
-            border-radius: var(--panel-radius);
+        #robot-chat-panel {
             width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
-            padding: 2rem;
-            position: relative;
-            box-shadow: 0 0 30px rgba(0, 224, 255, 0.3);
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-        :root[data-theme="light"] #gemini-modal-panel {
-             box-shadow: 0 10px 30px rgba(0, 86, 179, 0.2);
-        }
-        #gemini-modal-overlay.modal-visible #gemini-modal-panel {
-            transform: scale(1);
-        }
-        #gemini-modal-close {
-            position: absolute;
-            top: 1rem;
-            right: 1.5rem;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-        #gemini-modal-close:hover {
-            color: var(--accent-pink);
-        }
-        #gemini-modal-title {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--accent-cyan);
-            margin-bottom: 1.5rem;
-            padding-right: 2rem;
-        }
-        #gemini-modal-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            font-size: 0.95rem;
-            line-height: 1.7;
-            white-space: pre-wrap;
-            color: var(--text-main);
-        }
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--panel-border-color);
-            border-top-color: var(--accent-cyan);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 2rem auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            height: 450px;
+            max-width: 100%; /* Override desktop max-width */
         }
 
-        /* --- [RESPONSIVENESS] --- */
-        @media (max-width: 900px) {
-            .hud {
-                font-size: 0.8rem;
-            }
-            #hud-objective, .hud-top-right, #hud-minimap {
-                transform: scale(0.8);
-                transform-origin: top left;
-            }
-            .hud-top-right { transform-origin: top right; }
-            #hud-minimap { transform-origin: bottom left; }
-            .top-nav {
-                transform: translateX(-50%) scale(0.9);
-            }
+        #robot-chat-input-container {
+            padding-top: 1rem;
+            flex-wrap: wrap; /* Allow buttons to wrap if needed */
         }
-        @media (max-width: 600px) {
-            .district-title {
-                font-size: 2rem;
-            }
-            .main-wrapper {
-                padding: 10vh 1rem 5rem;
-            }
-            .holo-panel {
-                padding: 1.5rem;
-            }
-            .project-grid {
-                grid-template-columns: 1fr;
-            }
-            .top-nav {
-                gap: 0.8rem;
-                padding: 0.4rem 0.9rem;
-            }
-            .top-nav a {
-                font-size: 0.7rem;
-            }
+        #robot-chat-input {
+            flex-basis: 100%; /* Full width */
+            margin-bottom: 0.5rem; /* Space before buttons */
         }
-
-    </style>
-</head>
-<body>
-
-    <!-- --- [LOADING_SCREEN] --- -->
-    <div id="loading-screen">
-        <h1 class="loading-title">Heena Kousar</h1>
-        <h2 class="loading-subtitle">AI Researcher · Developer · Creator</h2>
-        <p class="loading-quote">"I don’t just write code — I create worlds where machines learn and stories think."</p>
+        .chat-button {
+            flex-grow: 1; /* Buttons share remaining space */
+            height: 44px;
+        }
         
-        <!-- 3D loader -->
-        <canvas id="loading-3d-canvas"></canvas>
-        <div id="loading-status">INITIATING AI CORE...</div>
+        /* [NEW] Adjust chat trigger for mobile */
+        .chat-trigger {
+            bottom: 15px;
+            right: 15px;
+            padding: 0.6rem 1rem;
+            font-size: 1rem;
+        }
+        
+        /* Mobile minimap adjustments: slightly smaller */
+        /* [CHANGED] Raised minimap to avoid chat trigger button */
+        #hud-minimap {
+            bottom: 92px;
+            left: 12px;
+            width: 140px;
+            height: 100px;
+            border-width: 1px;
+        }
+    }
 
-        <button id="jack-in-button" class="jack-in-button" data-sfx="click">[ JACK IN ]</button>
-    </div>
+</style>
+</head> <body>
+
+<div id="loading-screen">
+    <h1 class="loading-title">Heena Kousar</h1>
+    <h2 class="loading-subtitle">AI Researcher · Developer · Creator</h2>
+    <p class="loading-quote">"I don’t just write code — I create worlds where machines learn and stories think."</p>
     
-    <!-- --- [MAIN_APP_WRAPPER] --- -->
-    <div id="main-app">
-        <!-- Backgrounds -->
-        <canvas id="astra-canvas"></canvas>
-        <div class="light-mode-bg"></div>
-        <div class="video-overlay"></div>
-        
-        <!-- Ambient Audio -->
-        <audio id="ambient-music" loop>
-            <source src="https://cdn.pixabay.com/audio/2022/11/22/audio_2911851b4b.mp3" type="audio/mpeg">
-        </audio>
+    <canvas id="loading-3d-canvas"></canvas>
+    <div id="loading-status">INITIATING AI CORE...</div>
 
-        <!-- Game HUD -->
-        <div class="hud">
-            <div id="hud-objective">
-                OBJECTIVE:
-                <div id="hud-objective-text">Access Neural City</div>
-            </div>
+    <button id="jack-in-button" class="jack-in-button" data-sfx="click">[ JACK IN ]</button>
+</div>
 
-            <!-- TOP NAVBAR -->
-            <nav class="top-nav">
-                <a href="#hero-section" class="nav-primary">Home</a>
-                <a href="#projects-district">Projects</a>
-                <a href="#experience-district">Experience</a>
-                <a href="#contact-district">Contact</a>
-            </nav>
+<div id="main-app">
+    <canvas id="astra-canvas"></canvas>
+    <div class="light-mode-bg"></div>
+    <div class="video-overlay"></div>
+    
+    <audio id="ambient-music" loop>
+        <source src="https://cdn.pixabay.com/audio/2022/11/22/audio_2911851b4b.mp3" type="audio/mpeg">
+    </audio>
 
-            <div class="hud-top-right">
-                <span id="hud-clock">00:00:00</span>
-                <span id="hud-sound-toggle" data-sfx="click">🔊</span>
-                
-                <label class="theme-slider" for="theme-toggle-input">
-                    <input type="checkbox" id="theme-toggle-input">
-                    <span class="slider-knob"></span>
-                    <span class="icon sun">🌙</span>
-                    <span class="icon moon">☀</span>
-                </label>
-            </div>
-
-            <div id="hud-minimap">
-                <div class="map-dot" id="map-projects" data-sfx="click" data-target="#projects-district" title="Project Database"></div>
-                <div class="map-dot" id="map-experience" data-sfx="click" data-target="#experience-district" title="Career Event Log"></div>
-                <div class="map-dot" id="map-contact" data-sfx="click" data-target="#contact-district" title="Secure Uplink"></div>
-            </div>
+    <div class="hud">
+        <div id="hud-objective">
+            OBJECTIVE:
+            <div id="hud-objective-text">Access Portfolio City</div>
         </div>
 
-        <!-- Scrollable Content -->
-        <div class="main-wrapper">
-        
-            <!-- == HERO_SECTION == -->
-            <section id="hero-section" class="hero-section district">
-                <h1 class="hero-title">
-                    HEENA KOUSAR
-                    <br>
-                    <span>AI Researcher & World Builder</span>
-                </h1>
-                <p class="hero-subtitle">
-                    I’m an AI Researcher at the University of Southern California, working on 3D saree customization using AI + AR and personalized recommendation systems. I enjoy turning complex ML ideas into polished web experiences that users love.
-                    <br>
-                    Welcome to my portfolio.
-                </p>
-            </section>
+        <nav class="top-nav">
+            <a href="#hero-section" class="nav-primary">Home</a>
+            <a href="#projects-district">Projects</a>
+            <a href="#experience-district">Experience</a>
+            <a href="#contact-district">Contact</a>
+        </nav>
 
-            <!-- == PROJECT DATABASE == -->
-            <section id="projects-district" class="district">
-                <h2 class="district-title"><span>[SECTOR_01]</span>// PROJECT DATABASE //</h2>
-                <div class="project-grid">
-                    
-                    <div class="holo-panel project-panel" data-sfx="hover">
-                        <div class="project-header">
-                            <h3 class="project-title">3D Saree Customization Platform</h3>
-                            <span class="project-tag">USC · AI + AR Research</span>
-                        </div>
-                        <p class="project-desc">AI-powered 3D saree customization and virtual try-on experience using computer vision, fabric simulation, and augmented reality.</p>
-                        <ul class="project-list">
-                            <li>Real-time saree draping and texture rendering using ML-based pattern recognition and simulation.</li>
-                            <li>AR visualization that lets users see sarees on themselves before purchase, enhancing confidence and personalization.</li>
-                        </ul>
-                        <div class="project-tech"><strong>Tech:</strong> Python, CV/ML, AR, Web · Focus: Retail AI, User Experience</div>
-                    
-                        <div class="project-analysis">
-                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
-                                '3D Saree Customization Platform',
-                                'AI-powered 3D saree customization and virtual try-on experience using computer vision, fabric simulation, and augmented reality. Real-time saree draping and texture rendering using ML-based pattern recognition and simulation. AR visualization that lets users see sarees on themselves before purchase, enhancing confidence and personalization.'
-                            )">
-                                [ ✨ Run AI Analysis ]
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="holo-panel project-panel" data-sfx="hover">
-                        <div class="project-header">
-                            <h3 class="project-title">U.S. Army Onboarding & Access</h3>
-                            <span class="project-tag">JAN 2025 – MAY 2025</span>
-                        </div>
-                        <p class="project-desc">Designed a centralized digital platform to streamline onboarding and system access for the United States Army.</p>
-                        <ul class="project-list">
-                            <li>Conducted user research to identify pain points in fragmented onboarding systems.</li>
-                            <li>Built a web-based prototype integrating multiple databases with secure authentication to meet military compliance.</li>
-                            <li>Presented findings and go-to-market strategy to military leadership and technical teams.</li>
-                        </ul>
-                        <div class="project-tech"><strong>Focus:</strong> UX Research, System Design</div>
-                    
-                        <div class="project-analysis">
-                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
-                                'U.S. Army Onboarding & Access',
-                                'Designed a centralized digital platform to streamline onboarding and system access for the United States Army. Conducted user research to identify pain points in fragmented onboarding systems. Built a web-based prototype integrating multiple databases with secure authentication to meet military compliance.'
-                            )">
-                                [ ✨ Run AI Analysis ]
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="holo-panel project-panel" data-sfx="hover">
-                        <div class="project-header">
-                            <h3 class="project-title">Mafia AI – Cinematic Mystery Game</h3>
-                            <a href="https://mafia-mystery.replit.app/" target="_blank" class="live-demo" data-sfx="click">Live Demo ↗</a>
-                        </div>
-                        <p class="project-desc">Story-driven mystery game blending AI-generated narrative with multi-world environments (Diwali, Wedding, Hogwarts, Cruise).</p>
-                        <ul class="project-list">
-                            <li>Architected front-end in React and back-end in Node.js with modular story components.</li>
-                            <li>Used AI to adjust clues and dialogue based on player behavior.</li>
-                            <li>Designed branding, UX flows, and responsive layouts for web.</li>
-                        </ul>
-                        <div class="project-tech"><strong>Tech:</strong> React, Node, AI APIs · Focus: Interactive Storytelling</div>
-                    
-                        <div class="project-analysis">
-                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
-                                'Mafia AI – Cinematic Mystery Game',
-                                'Story-driven mystery game blending AI-generated narrative with multi-world environments (Diwali, Wedding, Hogwarts, Cruise). Architected front-end in React and back-end in Node.js. Used AI to adjust clues and dialogue based on player behavior.'
-                            )">
-                                [ ✨ Run AI Analysis ]
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="holo-panel project-panel" data-sfx="hover">
-                        <div class="project-header">
-                            <h3 class="project-title">Beauty Product Recommendation</h3>
-                            <span class="project-tag">USC · AI Product</span>
-                        </div>
-                        <p class="project-desc">AI system recommending beauty products by understanding user intent, preferences, and behavior.</p>
-                        <ul class="project-list">
-                            <li>Combined GPT-based understanding with FAISS vector search for efficient retrieval.</li>
-                            <li>Improved engagement and relevance with continuous A/B testing.</li>
-                        </ul>
-                        <div class="project-tech"><strong>Tech:</strong> Python, OpenAI, FAISS · Focus: Recommender Systems</div>
-                    
-                        <div class="project-analysis">
-                            <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
-                                'Beauty Product Recommendation Engine',
-                                'AI system recommending beauty products by understanding user intent, preferences, and behavior. Combined GPT-based understanding with FAISS vector search for efficient retrieval. Improved engagement and relevance with continuous A/B testing.'
-                            )">
-                                [ ✨ Run AI Analysis ]
-                            </button>
-                        </div>
-                    </div>
-                    
-                </div>
-            </section>
+        <div class="hud-top-right">
+            <span id="hud-clock">00:00:00</span>
+            <span id="hud-chat-toggle" data-sfx="click" title="Chat with AI Assistant">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </span>
+            <span id="hud-sound-toggle" data-sfx="click">🔊</span>
             
-            <!-- == CAREER EVENT LOG == -->
-            <section id="experience-district" class="district">
-                <h2 class="district-title"><span>[SECTOR_02]</span>// PROFESSIONAL EXPERIENCE //</h2>
-                <div class="timeline">
-                    
-                    <div class="holo-panel timeline-item" data-sfx="hover">
-                        <h3>AI Researcher</h3>
-                        <h4>University of Southern California</h4>
-                        <span class="date">[JULY 2025 – PRESENT]</span>
-                        <ul>
-                            <li>Architecting the 3D Saree Customization AI/AR platform.</li>
-                            <li>Developing core ML models for fabric simulation and pattern recognition.</li>
-                        </ul>
-                    </div>
+            <label class="theme-slider" for="theme-toggle-input">
+                <input type="checkbox" id="theme-toggle-input">
+                <span class="slider-knob"></span>
+                <span class="icon sun">🌙</span>
+                <span class="icon moon">☀</span>
+            </label>
+        </div>
 
-                    <div class="holo-panel timeline-item" data-sfx="hover">
-                        <h3>Co-Founder</h3>
-                        <h4>Mafia AI (Independent Project)</h4>
-                        <span class="date">[OCT 2025 – PRESENT]</span>
-                        <ul>
-                            <li>Led full-stack development (React/Node) and UX for the cinematic AI game.</li>
-                        </ul>
-                    </div>
-
-                    <div class="holo-panel timeline-item" data-sfx="hover">
-                        <h3>AI Product Lead</h3>
-                        <h4>USC (Beauty Rec Engine)</h4>
-                        <span class="date">[JAN 2025 – MAY 2025]</span>
-                        <ul>
-                            <li>Managed end-to-end development of an AI recommendation system.</li>
-                            <li>Integrated OpenAI & FAISS, improving engagement by ~20%.</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="holo-panel timeline-item" data-sfx="hover">
-                        <h3>Web Developer Intern</h3>
-                        <h4>Kintsugi Global, Los Angeles</h4>
-                        <span class="date">[MAY 2024 – JULY 2024]</span>
-                        <ul>
-                            <li>Built responsive React.js pages for an anime manga reader.</li>
-                            <li>Implemented smooth navigation and zoom features.</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- == SECURE UPLINK == -->
-            <section id="contact-district" class="district">
-                <h2 class="district-title"><span>[SECTOR_03]</span>// CONTACT //</h2>
-                <div class="terminal-grid">
-                    <a href="mailto:hkbaig5@gmail.com?subject=Neural%20City%20Connection%20Request" class="terminal-button" data-sfx="click">
-                        INITIATE CONTACT
-                        <span>[hkbaig5@gmail.com]</span>
-                    </a>
-                    <a href="https://www.linkedin.com/in/heena-kousar-baig/" target="_blank" class="terminal-button" data-sfx="click">
-                        ACCESS: LINKEDIN
-                        <span>[Professional Network]</span>
-                    </a>
-                    <a href="mailto:hkbaig5@gmail.com?subject=Resume%20Request" class="terminal-button" data-sfx="click">
-                        REQUEST: RESUME
-                        <span>[Secure Data Packet]</span>
-                    </a>
-                </div>
-            </section>
-
+        <div id="hud-minimap">
+            <svg class="map-routes" viewBox="0 0 180 140" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M36,21 Q54,56 90,84 T153,42" stroke="rgba(240, 0, 184, 0.6)" stroke-width="2" fill="none" stroke-dasharray="4 4" />
+                <path d="M54,70 Q90,56 108,98" stroke="rgba(255, 215, 0, 0.6)" stroke-width="2" fill="none" stroke-dasharray="3 3" />
+            </svg>
+            <div class="map-dot" id="map-projects" data-sfx="click" data-target="#projects-district" title="Project Database"></div>
+            <div class="map-dot" id="map-experience" data-sfx="click" data-target="#experience-district" title="Career Event Log"></div>
+            <div class="map-dot" id="map-contact" data-sfx="click" data-target="#contact-district" title="Secure Uplink"></div>
         </div>
     </div>
 
-    <!-- --- [AI ANALYSIS MODAL] --- -->
-    <div id="gemini-modal-overlay">
-        <div id="gemini-modal-panel" class="holo-panel">
-            <button id="gemini-modal-close" data-sfx="click">[ X ]</button>
-            <h2 id="gemini-modal-title">// RUNNING ANALYSIS...</h2>
-            <div id="gemini-modal-content">
-                <div class="loader"></div>
+    <div class="main-wrapper">
+    
+        <section id="hero-section" class="hero-section district">
+            <div class="hero-content-wrapper">
+                <div class="hero-text">
+                    <h1 class="hero-title reveal-fade-up">
+                        HEENA KOUSAR
+                        <br>
+                        <span>AI Researcher & World Builder</span>
+                    </h1>
+                    <p class="hero-subtitle reveal-fade-up">
+                        I’m an AI Researcher at the University of Southern California, working on 3D saree customization using AI + AR and personalized recommendation systems. I enjoy turning complex ML ideas into polished web experiences that users love.
+                        <br>
+                        Welcome to my portfolio.
+                    </p>
+                </div>
+                <div class="hero-image-container reveal-fade-up">
+                    <img src="heena.png" alt="Heena Kousar" class="hero-photo">
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- --- [DEBUG_TERMINAL_EASTER_EGG] --- -->
-    <div id="debug-terminal">
-        <div id="debug-output">
-            NEURAL_CITY_OS v2.0 DEBUG CONSOLE
-            (c) 2025 Heena Kousar, Architect.
-            Type 'help' for commands. Type 'exit' to close.
-            <br>
-        </div>
-        <div class="debug-input-line">
-            <span>HK_OS:/$</span>
-            <input type="text" id="debug-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // --- [AUDIO_CONTROLLER] ---
-            const AudioController = {
-                audioCtx: null,
-                soundEnabled: true,
-                ambient: document.getElementById('ambient-music'),
-                toggleButton: document.getElementById('hud-sound-toggle'),
-
-                init() {
-                    try {
-                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        this.ambient.volume = 0.3;
-                    } catch (e) {
-                        console.warn('Web Audio API not supported.');
-                    }
-                    
-                    this.toggleButton.addEventListener('click', () => this.toggleSound());
-
-                    // Bind hover/click sounds
-                    document.querySelectorAll('[data-sfx="hover"]').forEach(el => {
-                        el.addEventListener('mouseenter', () => this.playSound('hover'));
-                    });
-                    document.querySelectorAll('[data-sfx="click"]').forEach(el => {
-                        el.addEventListener('click', () => this.playSound('click'));
-                    });
-                },
-
-                playSound(type) {
-                    if (!this.soundEnabled || !this.audioCtx) return;
-                    
-                    const oscillator = this.audioCtx.createOscillator();
-                    const gainNode = this.audioCtx.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(this.audioCtx.destination);
-                    
-                    gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
-
-                    if (type === 'hover') {
-                        gainNode.gain.linearRampToValueAtTime(0.2, this.audioCtx.currentTime + 0.01);
-                        oscillator.type = 'sine';
-                        oscillator.frequency.setValueAtTime(800, this.audioCtx.currentTime);
-                    } else if (type === 'click') {
-                        gainNode.gain.linearRampToValueAtTime(0.3, this.audioCtx.currentTime + 0.01);
-                        oscillator.type = 'triangle';
-                        oscillator.frequency.setValueAtTime(1000, this.audioCtx.currentTime);
-                        oscillator.frequency.exponentialRampToValueAtTime(300, this.audioCtx.currentTime + 0.1);
-                    } else if (type === 'boot') {
-                        gainNode.gain.linearRampToValueAtTime(0.4, this.audioCtx.currentTime + 0.02);
-                        oscillator.type = 'sawtooth';
-                        oscillator.frequency.setValueAtTime(100, this.audioCtx.currentTime);
-                        oscillator.frequency.exponentialRampToValueAtTime(800, this.audioCtx.currentTime + 0.5);
-                    }
-
-                    gainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.2);
-                    oscillator.start(this.audioCtx.currentTime);
-                    oscillator.stop(this.audioCtx.currentTime + 0.2);
-                },
-
-                toggleSound() {
-                    this.soundEnabled = !this.soundEnabled;
-                    this.toggleButton.innerHTML = this.soundEnabled ? '🔊' : '🔇';
-                    if (this.soundEnabled) {
-                        this.ambient.play();
-                    } else {
-                        this.ambient.pause();
-                    }
-                    this.playSound('click');
-                },
+        <section id="projects-district" class="district">
+            <h2 class="district-title reveal-fade-up"><span>[SECTOR_01]</span>// PROJECT DATABASE //</h2>
+            <div class="project-grid">
                 
-                startAmbient() {
-                    if (this.soundEnabled) {
-                        this.ambient.play().catch(e => console.log("Audio play blocked by browser."));
-                    }
+                <div class="holo-panel project-panel reveal-fade-up" data-sfx="hover">
+                    <div class="project-flipper">
+                        <div class="project-face project-front">
+                            <div class="project-header">
+                                <h3 class="project-title">3D Saree Customization Platform</h3>
+                                <span class="project-tag">USC · AI + AR Research</span>
+                            </div>
+                            <p class="project-desc">AI-powered 3D saree customization and virtual try-on experience using computer vision, fabric simulation, and augmented reality.</p>
+                            <ul class="project-list">
+                                <li>Real-time saree draping and texture rendering using ML-based pattern recognition and simulation.</li>
+                                <li>AR visualization that lets users see sarees on themselves before purchase, enhancing confidence and personalization.</li>
+                            </ul>
+                            <div class="project-tech"><strong>Tech:</strong> Python, CV/ML, AR, Web · Focus: Retail AI, User Experience</div>
+                            <div class="project-analysis">
+                                <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                    '3D Saree Customization Platform',
+                                    'AI-powered 3D saree customization and virtual try-on experience using computer vision, fabric simulation, and augmented reality. Real-time saree draping and texture rendering using ML-based pattern recognition and simulation. AR visualization that lets users see sarees on themselves before purchase, enhancing confidence and personalization.'
+                                )">
+                                    [ ✨ Run AI Analysis ]
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate //</p>
+                        </div>
+                        <div class="project-face project-back">
+                            <h3 class="project-title" style="color: var(--accent-gold);">Project Details</h3>
+                            <p class="project-desc" style="flex-grow: 0.1;">This project is at the core of my research, blending computer vision with augmented reality.</p>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate back //</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="holo-panel project-panel reveal-fade-up" data-sfx="hover">
+                    <div class="project-flipper">
+                        <div class="project-face project-front">
+                            <div class="project-header">
+                                <h3 class="project-title">U.S. Army Onboarding & Access</h3>
+                                <span class="project-tag">JAN 2025 – MAY 2025</span>
+                            </div>
+                            <p class="project-desc">Designed a centralized digital platform to streamline onboarding and system access for the United States Army.</p>
+                            <ul class="project-list">
+                                <li>Conducted user research to identify pain points in fragmented onboarding systems.</li>
+                                <li>Presented findings and go-to-market strategy to military leadership and technical teams.</li>
+                            </ul>
+                            <div class="project-tech"><strong>Focus:</strong> UX Research, System Design</div>
+                            <div class="project-analysis">
+                                <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                    'U.S. Army Onboarding & Access',
+                                    'Designed a centralized digital platform to streamline onboarding and system access for the United States Army. Conducted user research to identify pain points in fragmented onboarding systems. Built a web-based prototype integrating multiple databases with secure authentication to meet military compliance.'
+                                )">
+                                    [ ✨ Run AI Analysis ]
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate //</p>
+                        </div>
+                        <div class="project-face project-back">
+                            <h3 class="project-title" style="color: var(--accent-gold);">System Design</h3>
+                            <p class="project-desc" style="flex-grow: 0.1;">This project focused on deep UX research and requirement analysis for a high-security environment.</p>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate back //</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="holo-panel project-panel reveal-fade-up" data-sfx="hover">
+                    <div class="project-flipper">
+                        <div class="project-face project-front">
+                            <div class="project-header">
+                                <h3 class="project-title">Mafia AI – Cinematic Mystery Game</h3>
+                                <a href="https://mafia-mystery.replit.app/" target="_blank" class="live-demo" data-sfx="click">Live Demo ↗</a>
+                            </div>
+                            <p class="project-desc">Story-driven mystery game blending AI-generated narrative with multi-world environments (Diwali, Wedding, Hogwarts, Cruise).</p>
+                            <ul class="project-list">
+                                <li>Architected front-end in React and back-end in Node.js with modular story components.</li>
+                                <li>Used AI to adjust clues and dialogue based on player behavior.</li>
+                            </ul>
+                            <div class="project-tech"><strong>Tech:</strong> React, Node, AI APIs · Focus: Interactive Storytelling</div>
+                            <div class="project-analysis">
+                                <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                    'Mafia AI – Cinematic Mystery Game',
+                                    'Story-driven mystery game blending AI-generated narrative with multi-world environments (Diwali, Wedding, Hogwarts, Cruise). Architected front-end in React and back-end in Node.js. Used AI to adjust clues and dialogue based on player behavior.'
+                                )">
+                                    [ ✨ Run AI Analysis ]
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate //</p>
+                        </div>
+                        <div class="project-face project-back">
+                            <h3 class="project-title" style="color: var(--accent-gold);">Interactive Storytelling</h3>
+                            <p class="project-desc" style="flex-grow: 0.1;">A passion project combining full-stack development with dynamic, AI-driven narrative design.</p>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate back //</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="holo-panel project-panel reveal-fade-up" data-sfx="hover">
+                    <div class="project-flipper">
+                        <div class="project-face project-front">
+                            <div class="project-header">
+                                <h3 class="project-title">Beauty Product Recommendation</h3>
+                                <a href="https://beauty-advisor-heenakou.replit.app/" target="_blank" class="live-demo" data-sfx="click">Live Demo ↗</a>
+                            </div>
+                            <p class="project-desc">An AI-powered web app that provides highly personalized product recommendations by analyzing user profiles, preferences, skin types, and beauty goals.</p>
+                            <ul class="project-list">
+                                <li>AI-driven recommendation engine using collaborative filtering and content-based algorithms.</li>
+                                <li>Personalized product matching based on skin type, concerns, and preferences.</li>
+                            </ul>
+                            <div class="project-tech"><strong>Tech:</strong> Web Development, AI, Database Design, UI/UX, API Integration</div>
+                            <div class="project-analysis">
+                                <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                    'Beauty Product Recommendation Engine',
+                                    'AI-powered web application designed to revolutionize how users discover and select beauty products. By analyzing user profiles, preferences, skin types, and beauty goals, the system provides highly personalized product recommendations that match individual needs.'
+                                )">
+                                    [ ✨ Run AI Analysis ]
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate //</p>
+                        </div>
+                        <div class="project-face project-back">
+                            <h3 class="project-title" style="color: var(--accent-gold);">AI Recommendation Engine</h3>
+                            <p class="project-desc" style="flex-grow: 0.1;">This system uses collaborative filtering and content-based algorithms to provide accurate, personalized product suggestions.</p>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate back //</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="holo-panel project-panel reveal-fade-up" data-sfx="hover">
+                    <div class="project-flipper">
+                        <div class="project-face project-front">
+                            <div class="project-header">
+                                <h3 class="project-title">JobMatch: Advanced Job Portal</h3>
+                                <a href="https://job-connect-pro-heenakou.replit.app/" target="_blank" class="live-demo" data-sfx="click">Live Demo ↗</a>
+                            </div>
+                            <p class="project-desc">A comprehensive full-stack job portal that bridges the gap between job seekers and employers, providing an intuitive workspace for posting jobs, searching opportunities, and managing applications.</p>
+                            <ul class="project-list">
+                                <li>Real-time job search with advanced filtering options.</li>
+                                <li>Secure user authentication and authorization (JWT).</li>
+                                <li>Application tracking system for both job seekers and employers.</li>
+                            </ul>
+                            <div class="project-tech"><strong>Tech:</strong> React.js, Express.js, PostgreSQL, Tailwind CSS, JWT</div>
+                            <div class="project-analysis">
+                                <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                    'JobMatch: Advanced Job Portal',
+                                    'A comprehensive full-stack job portal that bridges the gap between job seekers and employers. Features real-time job search, secure JWT authentication, and an application tracking system. Built with React.js, Express.js, and PostgreSQL.'
+                                )">
+                                    [ ✨ Run AI Analysis ]
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate //</p>
+                        </div>
+                        <div class="project-face project-back">
+                            <h3 class="project-title" style="color: var(--accent-gold);">Full-Stack Application</h3>
+                            <p class="project-desc" style="flex-grow: 0.1;">A full-stack project featuring a React/Tailwind frontend, an Express.js RESTful API, and a PostgreSQL database.</p>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate back //</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="holo-panel project-panel reveal-fade-up" data-sfx="hover">
+                    <div class="project-flipper">
+                        <div class="project-face project-front">
+                            <div class="project-header">
+                                <h3 class="project-title">Financial Market Intelligence</h3>
+                                <a href="https://search-master-heenakou.replit.app/" target="_blank" class="live-demo" data-sfx="click">Live Demo ↗</a>
+                            </div>
+                            <p class="project-desc">A sophisticated financial analysis platform that provides comprehensive stock market insights and risk assessment tools, built to help investors make informed decisions.</p>
+                            <ul class="project-list">
+                                <li>Real-time stock market data integration.</li>
+                                <li>Advanced data visualization and charting.</li>
+                                <li>Risk assessment algorithms and financial APIs integration.</li>
+                            </ul>
+                            <div class="project-tech"><strong>Tech:</strong> Python, Flask, Financial APIs, Data Visualization, Risk Assessment</div>
+                            <div class="project-analysis">
+                                <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                    'Financial Market Intelligence Platform',
+                                    'A sophisticated financial analysis platform that provides comprehensive stock market insights and risk assessment tools. Built to help investors make informed decisions through real-time data and advanced analytics using Python, Flask, and Financial APIs.'
+                                )">
+                                    [ ✨ Run AI Analysis ]
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate //</p>
+                        </div>
+                        <div class="project-face project-back">
+                            <h3 class="project-title" style="color: var(--accent-gold);">Data & Analytics</h3>
+                            <p class="project-desc" style="flex-grow: 0.1;">This platform uses a Python/Flask backend for robust data processing and financial API integration.</p>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate back //</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="holo-panel project-panel reveal-fade-up" data-sfx="hover">
+                    <div class="project-flipper">
+                        <div class="project-face project-front">
+                            <div class="project-header">
+                                <h3 class="project-title">Brain Tumor Segmentation</h3>
+                                <a href="https://www.irjet.net/" target="_blank" class="live-demo" data-sfx="click">View Publication ↗</a>
+                            </div>
+                            <p class="project-desc">Research focused on developing an improved U-Net framework for semantic segmentation of brain tumors in MRI images. Published in the IRJET Journal (Vol. 09, Issue 07, July 2022).</p>
+                            <ul class="project-list">
+                                <li>Enhanced U-Net architecture for improved segmentation accuracy.</li>
+                                <li>Developed a deep learning approach to medical image analysis.</li>
+                            </ul>
+                            <div class="project-tech"><strong>Focus:</strong> Deep Learning, Medical Imaging, U-Net Architecture, Research</div>
+                            <div class="project-analysis">
+                                <button class="analysis-button" data-sfx="click" onclick="openAnalysisModal(
+                                    'Brain Tumor Segmentation (Publication)',
+                                    'This research focused on developing an improved U-Net framework for semantic segmentation of brain tumors in MRI images. The work was published in the International Research Journal of Engineering and Technology (IRJET) Volume 09, Issue 07, July 2022.'
+                                )">
+                                    [ ✨ Run AI Analysis ]
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate //</p>
+                        </div>
+                        <div class="project-face project-back">
+                            <h3 class="project-title" style="color: var(--accent-gold);">Research & Publication</h3>
+                            <p class="project-desc" style="flex-grow: 0.1;">This research was published in the International Research Journal of Engineering and Technology (IRJET).</p>
+                            <p style="font-size: 0.8rem; color: var(--accent-gold); text-align: center; margin-top: 1rem; animation: pulse 2s infinite;">// Click to rotate back //</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        
+        <section id="experience-district" class="district">
+            <h2 class="district-title reveal-fade-up"><span>[SECTOR_02]</span>// PROFESSIONAL EXPERIENCE //</h2>
+            <div class="timeline">
+                
+                <div class="holo-panel timeline-item reveal-fade-up" data-sfx="hover">
+                    <h3>AI Researcher</h3>
+                    <h4>University of Southern California</h4>
+                    <span class="date">[JULY 2025 – PRESENT]</span>
+                    <ul>
+                        <li>Architecting the 3D Saree Customization AI/AR platform.</li>
+                        <li>Developing core ML models for fabric simulation and pattern recognition.</li>
+                        <li>Collaborating with cross-functional teams to integrate AR modules with the e-commerce backend.</li>
+                        <li>Publishing research findings and contributing to academic papers on novel computer vision techniques.</li>
+                    </ul>
+                </div>
+
+                <div class="holo-panel timeline-item reveal-fade-up" data-sfx="hover">
+                    <h3>Co-Founder</h3>
+                    <h4>Mafia AI (Independent Project)</h4>
+                    <span class="date">[OCT 2025 – PRESENT]</span>
+                    <ul>
+                        <li>Led full-stack development (React/Node) and UX for the cinematic AI game.</li>
+                        <li>Designed and implemented the generative AI pipeline for dynamic, branching narratives based on player choice.</li>
+                        <li>Managed project scope, go-to-market strategy, and initial user testing cycles.</li>
+                    </ul>
+                </div>
+
+                <div class="holo-panel timeline-item reveal-fade-up" data-sfx="hover">
+                    <h3>AI Product Lead</h3>
+                    <h4>USC (Beauty Rec Engine)</h4>
+                    <span class="date">[JAN 2025 – MAY 2025]</span>
+                    <ul>
+                        <li>Managed end-to-end development of an AI recommendation system.</li>
+                        <li>Integrated OpenAI & FAISS, improving engagement by ~20%.</li>
+                        <li>Defined product roadmap, authored PRDs, and managed sprints for a team of 3 developers.</li>
+                    </ul>
+                </div>
+                
+                <div class="holo-panel timeline-item reveal-fade-up" data-sfx="hover">
+                    <h3>Web Developer Intern</h3>
+                    <h4>Kintsugi Global, Los Angeles</h4>
+                    <span class="date">[MAY 2024 – JULY 2024]</span>
+                    <ul>
+                        <li>Built responsive React.js pages for an anime manga reader.</li>
+                        <li>Implemented smooth navigation and zoom features.</li>
+                        <li>Assisted in debugging and optimizing API call efficiency, reducing page load times by 15%.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <section id="contact-district" class="district">
+            <h2 class="district-title reveal-fade-up"><span>[SECTOR_03]</span>// CONTACT //</h2>
+            <div class="terminal-grid">
+                <a href="mailto:hkbaig5@gmail.com" class="terminal-button reveal-fade-up" data-sfx="click">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    INITIATE CONTACT
+                    <span>[hkbaig5@gmail.com]</span>
+                </a>
+                <a href="https://www.linkedin.com/in/heena-kousar-baig/" target="_blank" class="terminal-button reveal-fade-up" data-sfx="click">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                        <rect x="2" y="9" width="4" height="12"></rect>
+                        <circle cx="4" cy="4" r="2"></circle>
+                    </svg>
+                    ACCESS: LINKEDIN
+                    <span>[Professional Network]</span>
+                </a>
+                <a href="https://github.com/heenakousar16" target="_blank" class="terminal-button reveal-fade-up" data-sfx="click">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                    ACCESS: GITHUB
+                    <span>[Code Repository]</span>
+                </a>
+                <a href="Heena.pdf" target="_blank" class="terminal-button reveal-fade-up" data-sfx="click">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    REQUEST: RESUME
+                    <span>[Secure Data Packet]</span>
+                </a>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<div id="gemini-modal-overlay" class="modal-overlay">
+    <div id="gemini-modal-panel" class="modal-panel holo-panel">
+        <button id="gemini-modal-close" class="modal-close" data-sfx="click">[ X ]</button>
+        <h2 id="gemini-modal-title" class="modal-title">// RUNNING ANALYSIS...</h2>
+        <div id="gemini-modal-content" class="modal-content">
+            <div class="loader"></div>
+        </div>
+    </div>
+</div>
+
+<button id="chat-trigger-button" class="chat-trigger" data-sfx="click" title="Ask me anything!">
+    <span class="chat-trigger-text">Ask me!</span>
+    <div class="chat-trigger-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </div>
+</button>
+
+<div id="robot-chat-container"> <img src="https://cdn.pixabay.com/photo/2020/03/31/10/48/robot-4986618_960_720.png" 
+     id="robot-avatar" 
+     alt="Robot Assistant" 
+     onerror="this.style.display='none'">
+  <div id="robot-chat-panel" class="modal-panel holo-panel"> <button id="robot-chat-close" class="modal-close" data-sfx="click">[ X ]</button> <h2 id="robot-chat-title" class="modal-title">Heena's bot</h2> <div class="robot-chat-top-controls" aria-hidden="false">
+                <button id="robot-chat-speaker" class="chat-button" title="Toggle Speaker" aria-pressed="false"></button>
+            </div>
+    <div id="robot-chat-messages" class="modal-content"> </div>
+    <div id="robot-chat-input-container"> <input type="text" id="robot-chat-input" placeholder="Ask about projects, experience..."> <button id="robot-chat-mic" class="chat-button" title="Use Voice">🎤</button> <button id="robot-chat-send" class="chat-button" title="Send">➤</button> </div>
+  </div>
+</div>
+
+<div id="debug-terminal">
+    <div id="debug-output">
+        NEURAL_CITY_OS v2.0 DEBUG CONSOLE
+        (c) 2025 Heena Kousar, Architect.
+        Type 'help' for commands. Type 'exit' to close.
+        <br>
+    </div>
+    <div class="debug-input-line">
+        <span>HK_OS:/$</span>
+        <input type="text" id="debug-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- [AUDIO_CONTROLLER] --- 
+        const AudioController = {
+            audioCtx: null,
+            soundEnabled: true,
+            ambient: document.getElementById('ambient-music'),
+            toggleButton: document.getElementById('hud-sound-toggle'),
+
+            init() {
+                try {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    this.ambient.volume = 0.3;
+                } catch (e) {
+                    console.warn('Web Audio API not supported.');
                 }
-            };
-            AudioController.init();
+                
+                this.toggleButton.addEventListener('click', () => this.toggleSound());
 
-            // --- [THEME_CONTROLLER] ---
-            const themeToggle = document.getElementById('theme-toggle-input');
-            const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
+                document.querySelectorAll('[data-sfx="hover"]').forEach(el => {
+                    el.addEventListener('mouseenter', () => this.playSound('hover'));
+                });
+                document.querySelectorAll('[data-sfx="click"]').forEach(el => {
+                    el.addEventListener('click', () => this.playSound('click'));
+                });
+            },
 
-            if (savedTheme === 'light') {
+            playSound(type) {
+                if (!this.soundEnabled || !this.audioCtx) return;
+                
+                const oscillator = this.audioCtx.createOscillator();
+                const gainNode = this.audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioCtx.destination);
+                
+                gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+
+                if (type === 'hover') {
+                    gainNode.gain.linearRampToValueAtTime(0.2, this.audioCtx.currentTime + 0.01);
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(800, this.audioCtx.currentTime);
+                } else if (type === 'click') {
+                    gainNode.gain.linearRampToValueAtTime(0.3, this.audioCtx.currentTime + 0.01);
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(1000, this.audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(300, this.audioCtx.currentTime + 0.1);
+                } else if (type === 'boot') {
+                    gainNode.gain.linearRampToValueAtTime(0.4, this.audioCtx.currentTime + 0.02);
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(100, this.audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, this.audioCtx.currentTime + 0.5);
+                }
+
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.2);
+                oscillator.start(this.audioCtx.currentTime);
+                oscillator.stop(this.audioCtx.currentTime + 0.2);
+            },
+
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                this.toggleButton.innerHTML = this.soundEnabled ? '🔊' : '🔇';
+                
+                // Stop any ongoing speech
+                if (!this.soundEnabled) {
+                    window.speechSynthesis.cancel(); 
+                }
+                
+                if (this.soundEnabled) {
+                    this.ambient.play();
+                } else {
+                    this.ambient.pause();
+                }
+                this.playSound('click');
+            },
+            
+            startAmbient() {
+                if (this.soundEnabled) {
+                    this.ambient.play().catch(e => console.log("Audio play blocked by browser."));
+                }
+            }
+        };
+        AudioController.init();
+
+        // --- [THEME_CONTROLLER] ---
+        const themeToggle = document.getElementById('theme-toggle-input');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme');
+
+        if (savedTheme === 'light') {
+            html.setAttribute('data-theme', 'light');
+            themeToggle.checked = true;
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            themeToggle.checked = false;
+        }
+
+        // Helper: load first available image from a list of candidate paths
+        function loadFirstAvailable(srcs, cb) {
+            let i = 0;
+            function tryNext() {
+                if (i >= srcs.length) {
+                    // All failed — return the last one as a fallback (may show broken image)
+                    return cb(srcs[srcs.length - 1]);
+                }
+                const test = new Image();
+                test.onload = () => cb(srcs[i]);
+                test.onerror = () => { i++; tryNext(); };
+                // Start load attempt
+                test.src = srcs[i];
+            }
+            tryNext();
+        }
+
+        // Helper: update hero image based on current theme
+        function updateHeroImage() {
+            try {
+                const img = document.querySelector('.hero-image-container .hero-photo');
+                if (!img) return;
+                const theme = html.getAttribute('data-theme');
+                // Prefer images that support transparency first (png/webp), then fallback to png
+                const lightCandidates = ['heena.png', 'heena.webp', 'heena.png', 'heena.jpg'];
+                const darkCandidates = ['heena_dark.png', 'heena_dark.webp', 'heena_dark.png', 'heena_dark.jpg'];
+                const candidates = (theme === 'light') ? lightCandidates : darkCandidates;
+                loadFirstAvailable(candidates, (src) => {
+                    // If the image element is still present, set the resolved src
+                    if (img) img.src = src;
+                });
+                // Ensure container/background remains transparent
+                img.style.backgroundColor = 'transparent';
+            } catch (e) {
+                console.warn('Could not update hero image for theme switch', e);
+            }
+        }
+
+        // Initialize hero image on load
+        updateHeroImage();
+
+        themeToggle.addEventListener('change', () => {
+            AudioController.playSound('click');
+            if (themeToggle.checked) {
                 html.setAttribute('data-theme', 'light');
-                themeToggle.checked = true;
+                localStorage.setItem('theme', 'light');
             } else {
                 html.setAttribute('data-theme', 'dark');
-                themeToggle.checked = false;
+                localStorage.setItem('theme', 'dark');
+            }
+            // Update the hero image to match the new theme
+            updateHeroImage();
+        });
+
+
+        // --- [3D_LOADING_ANIMATION] --- 
+        function init3DLoadingAnimation() {
+            const canvas = document.getElementById('loading-3d-canvas');
+            if (!canvas || !window.THREE) return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+            renderer.setSize(100, 100);
+
+            let cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+            
+            const geometry = new THREE.IcosahedronGeometry(1.5, 0);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: new THREE.Color(cyanColor), 
+                wireframe: true 
+            });
+            const core = new THREE.Mesh(geometry, material);
+            scene.add(core);
+
+            camera.position.z = 3;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                core.rotation.x += 0.005;
+                core.rotation.y += 0.007;
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            themeToggle.addEventListener('change', () => {
+                 cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+                 core.material.color.set(cyanColor);
+            });
+        }
+        init3DLoadingAnimation();
+
+        // --- [3D_PARTICLE_BACKGROUND – ASTRA STYLE] --- 
+        // --- [MODIFIED] More dynamic "warp" effect ---
+        let astraInitialized = false;
+        function initAstraBackground() {
+            const canvas = document.getElementById('astra-canvas');
+            if (!canvas || !window.THREE) return;
+            if (astraInitialized) return;
+            astraInitialized = true;
+
+            let scene, camera, renderer, particleGroup, material;
+            let mouseX = 0, mouseY = 0;
+            let windowHalfX = window.innerWidth / 2;
+            let windowHalfY = window.innerHeight / 2;
+            
+            let cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000); // Increased far plane
+            camera.position.z = 1000;
+
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const numParticles = 15000; // [NEW] Increased particle count
+            const spread = 2000;
+
+            for (let i = 0; i < numParticles; i++) {
+                vertices.push(
+                    (Math.random() - 0.5) * spread, // x
+                    (Math.random() - 0.5) * spread, // y
+                    (Math.random() - 0.5) * spread  // z
+                );
             }
 
-            themeToggle.addEventListener('change', () => {
-                AudioController.playSound('click');
-                if (themeToggle.checked) {
-                    html.setAttribute('data-theme', 'light');
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    html.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            // [NEW] Store original positions for reset
+            geometry.setAttribute('originalPosition', new THREE.Float32BufferAttribute(vertices, 3));
+
+
+            material = new THREE.PointsMaterial({
+                color: new THREE.Color(cyanColor),
+                size: 1.5,
+                transparent: true,
+                opacity: 0.7,
+                blending: THREE.AdditiveBlending
             });
 
+            const particles = new THREE.Points(geometry, material);
+            
+            // [NEW] Use a group to rotate the whole system
+            particleGroup = new THREE.Group();
+            particleGroup.add(particles);
+            scene.add(particleGroup);
 
-            // --- [3D_LOADING_ANIMATION] ---
-            function init3DLoadingAnimation() {
-                const canvas = document.getElementById('loading-3d-canvas');
-                if (!canvas || !window.THREE) return;
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialiasi: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio || 1);
+            renderer.setClearColor(0x000000, 0);
 
-                const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-                const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
-                renderer.setSize(100, 100);
-
-                let cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
-                
-                const geometry = new THREE.IcosahedronGeometry(1.5, 0);
-                const material = new THREE.MeshBasicMaterial({ 
-                    color: new THREE.Color(cyanColor), 
-                    wireframe: true 
-                });
-                const core = new THREE.Mesh(geometry, material);
-                scene.add(core);
-
-                camera.position.z = 3;
-
-                function animate() {
-                    requestAnimationFrame(animate);
-                    core.rotation.x += 0.005;
-                    core.rotation.y += 0.007;
-                    renderer.render(scene, camera);
-                }
-                animate();
-                
-                themeToggle.addEventListener('change', () => {
-                     cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
-                     core.material.color.set(cyanColor);
-                });
-            }
-            init3DLoadingAnimation();
-
-            // --- [3D_PARTICLE_BACKGROUND – ASTRA STYLE] ---
-            let astraInitialized = false;
-            function initAstraBackground() {
-                const canvas = document.getElementById('astra-canvas');
-                if (!canvas || !window.THREE) return;
-                if (astraInitialized) return;
-                astraInitialized = true;
-
-                let scene, camera, renderer, particles, material;
-                let mouseX = 0, mouseY = 0;
-                let windowHalfX = window.innerWidth / 2;
-                let windowHalfY = window.innerHeight / 2;
-                
-                let cyanColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
-
-                scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-                camera.position.z = 1000;
-
-                const geometry = new THREE.BufferGeometry();
-                const vertices = [];
-                const numParticles = 10000;
-
-                for (let i = 0; i < numParticles; i++) {
-                    vertices.push(
-                        Math.random() * 2000 - 1000,
-                        Math.random() * 2000 - 1000,
-                        Math.random() * 2000 - 1000
-                    );
-                }
-
-                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-
-                material = new THREE.PointsMaterial({
-                    color: new THREE.Color(cyanColor),
-                    size: 1.5,
-                    transparent: true,
-                    opacity: 0.7,
-                    blending: THREE.AdditiveBlending
-                });
-
-                particles = new THREE.Points(geometry, material);
-                scene.add(particles);
-
-                renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            function onWindowResize() {
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
-                renderer.setPixelRatio(window.devicePixelRatio || 1);
-                renderer.setClearColor(0x000000, 0);
-
-                function onWindowResize() {
-                    windowHalfX = window.innerWidth / 2;
-                    windowHalfY = window.innerHeight / 2;
-                    camera.aspect = window.innerWidth / window.innerHeight;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                }
-
-                function onDocumentMouseMove(event) {
-                    mouseX = (event.clientX - windowHalfX) * 0.2;
-                    mouseY = (event.clientY - windowHalfY) * 0.2;
-                }
-
-                function animate() {
-                    requestAnimationFrame(animate);
-
-                    const time = Date.now() * 0.00005;
-                    
-                    camera.position.x += (mouseX - camera.position.x) * 0.05;
-                    camera.position.y += (-mouseY - camera.position.y) * 0.05;
-                    camera.lookAt(scene.position);
-
-                    particles.rotation.x = time * 0.2;
-                    particles.rotation.y = time * 0.5;
-
-                    renderer.render(scene, camera);
-                }
-
-                window.addEventListener('resize', onWindowResize, false);
-                document.addEventListener('mousemove', onDocumentMouseMove, false);
-
-                themeToggle.addEventListener('change', () => {
-                    const newColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
-                    material.color.set(newColor);
-                });
-
-                animate();
-                canvas.style.opacity = '1';
             }
 
+            function onDocumentMouseMove(event) {
+                mouseX = (event.clientX - windowHalfX) * 0.2;
+                mouseY = (event.clientY - windowHalfY) * 0.2;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+                
+                // [NEW] Rotate the group
+                particleGroup.rotation.y += 0.0005;
+                particleGroup.rotation.x += 0.0002;
+
+                // [NEW] Animate particles moving towards camera
+                const positions = geometry.attributes.position.array;
+                
+                for (let i = 0; i < positions.length; i += 3) {
+                    // Move particle along z-axis
+                    positions[i + 2] += 2; // Adjust speed here
+                    
+                    // If particle passes camera, reset it
+                    if (positions[i + 2] > 1000) {
+                        positions[i] = (Math.random() - 0.5) * spread;
+                        positions[i + 1] = (Math.random() - 0.5) * spread;
+                        positions[i + 2] = -1000;
+                    }
+                }
+                geometry.attributes.position.needsUpdate = true;
+                
+                renderer.render(scene, camera);
+            }
+
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+            themeToggle.addEventListener('change', () => {
+                const newColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim();
+                material.color.set(newColor);
+            });
+
+            animate();
+            canvas.style.opacity = '1';
+        }
+        // --- [END] Modified 3D Background ---
+
+
+        if (html.getAttribute('data-theme') === 'dark') {
+            initAstraBackground();
+        }
+        themeToggle.addEventListener('change', () => {
             if (html.getAttribute('data-theme') === 'dark') {
                 initAstraBackground();
             }
-            themeToggle.addEventListener('change', () => {
-                if (html.getAttribute('data-theme') === 'dark') {
-                    initAstraBackground();
-                }
-            });
-
-
-            // --- [BOOT_SEQUENCE_CONTROLLER] ---
-            const loadingScreen = document.getElementById('loading-screen');
-            const loadingStatus = document.getElementById('loading-status');
-            const jackInButton = document.getElementById('jack-in-button');
-            const mainApp = document.getElementById('main-app');
-            const statusUpdates = [
-                "RENDERING NEON GRID...",
-                "CALIBRATING NEURAL NET...",
-                "ACCESSING AI CORE...",
-                "BOOT SEQUENCE COMPLETE."
-            ];
-            let statusIndex = 0;
-            
-            const statusInterval = setInterval(() => {
-                if (statusIndex < statusUpdates.length) {
-                    loadingStatus.textContent = statusUpdates[statusIndex];
-                    statusIndex++;
-                } else {
-                    clearInterval(statusInterval);
-                    jackInButton.style.display = 'block';
-                }
-            }, 750);
-
-            jackInButton.addEventListener('click', () => {
-                AudioController.playSound('boot');
-                AudioController.startAmbient();
-                
-                loadingScreen.style.opacity = '0';
-                loadingScreen.style.visibility = 'hidden';
-                mainApp.style.visibility = 'visible';
-                mainApp.style.opacity = '1';
-                
-                setTimeout(() => loadingScreen.remove(), 1500);
-            });
-
-            // --- [HUD_CONTROLLER] ---
-            const clock = document.getElementById('hud-clock');
-            const objectiveText = document.getElementById('hud-objective-text');
-            const sections = document.querySelectorAll('.district');
-            const mapDots = document.querySelectorAll('.map-dot');
-            
-            setInterval(() => {
-                clock.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-            }, 1000);
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const id = entry.target.getAttribute('id');
-                    let mapDot = document.querySelector(`.map-dot[data-target="#${id}"]`);
-
-                    if (entry.isIntersecting) {
-                        let objective = "Explore Neural City";
-                        if (id === 'projects-district') objective = "Review Project Database";
-                        if (id === 'experience-district') objective = "Scan Career Event Log";
-                        if (id === 'contact-district') objective = "Access Secure Uplink";
-                        
-                        objectiveText.textContent = objective;
-                        
-                        mapDots.forEach(dot => dot.classList.remove('active'));
-                        if(mapDot) mapDot.classList.add('active');
-                    }
-                });
-            }, { rootMargin: "-40% 0px -60% 0px", threshold: 0 });
-
-            sections.forEach(sec => observer.observe(sec));
-            
-            mapDots.forEach(dot => {
-                dot.addEventListener('click', () => {
-                    document.querySelector(dot.dataset.target).scrollIntoView({ behavior: 'smooth' });
-                });
-            });
-
-            // --- [LOCAL AI ANALYSIS MODAL CONTROLLER] ---
-            const modalOverlay = document.getElementById('gemini-modal-overlay');
-            const modalTitle = document.getElementById('gemini-modal-title');
-            const modalContent = document.getElementById('gemini-modal-content');
-            const modalClose = document.getElementById('gemini-modal-close');
-            const loaderHTML = '<div class="loader"></div>';
-            
-            function generateLocalAnalysis(title, description) {
-                const descLower = description.toLowerCase();
-                const bullets = [];
-
-                if (descLower.includes('3d') || descLower.includes('ar')) {
-                    bullets.push("* Strong focus on immersive 3D/AR interfaces, combining perception, rendering, and real-time UX.");
-                }
-                if (descLower.includes('recommendation') || descLower.includes('faiss')) {
-                    bullets.push("* Emphasizes personalized recommendation systems with vector search and retrieval-augmented pipelines.");
-                }
-                if (descLower.includes('game')) {
-                    bullets.push("* Blends game design, narrative systems, and AI-driven behaviour for interactive storytelling.");
-                }
-                if (descLower.includes('army') || descLower.includes('onboarding')) {
-                    bullets.push("* Tackles complex onboarding and access workflows with an emphasis on usability and security.");
-                }
-
-                if (bullets.length === 0) {
-                    bullets.push("* Uses full-stack engineering and AI to solve user-centric problems.");
-                }
-
-                bullets.push("* Shows clear ownership across problem discovery, design, implementation, and iteration.");
-                bullets.push("* Demonstrates potential to scale into production settings with more data, users, and integration points.");
-                bullets.push("* Highlights a strong balance between technical depth and user experience.");
-
-                return `PROJECT: ${title}\n\n` +
-                       "Key Technical Takeaways:\n" +
-                       bullets.join("\n");
-            }
-
-            window.openAnalysisModal = async (title, description) => {
-                AudioController.playSound('click');
-                modalTitle.textContent = `// AI ANALYSIS: ${title}`;
-                modalContent.innerHTML = loaderHTML;
-                modalOverlay.classList.add('modal-visible');
-
-                await new Promise(resolve => setTimeout(resolve, 500));
-                const analysisText = generateLocalAnalysis(title, description);
-                modalContent.textContent = analysisText;
-            };
-
-            function closeAnalysisModal() {
-                AudioController.playSound('click');
-                modalOverlay.classList.remove('modal-visible');
-                setTimeout(() => {
-                    modalContent.innerHTML = loaderHTML;
-                    modalTitle.textContent = "// RUNNING ANALYSIS...";
-                }, 300);
-            }
-
-            modalClose.addEventListener('click', closeAnalysisModal);
-            modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) {
-                    closeAnalysisModal();
-                }
-            });
-
-            // --- [DEBUG_TERMINAL_CONTROLLER] ---
-            const terminal = document.getElementById('debug-terminal');
-            const output = document.getElementById('debug-output');
-            const input = document.getElementById('debug-input');
-            const mafiaArt = `
-    ███╗   ███╗ █████╗ ███████╗██╗ █████╗ 
-    ████╗ ████║██╔══██╗██╔════╝██║██╔══██╗
-    ██╔████╔██║███████║█████╗  ██║███████║
-    ██║╚██╔╝██║██╔══██║██╔══╝  ██║██╔══██║
-    ██║ ╚═╝ ██║██║  ██║███████╗██║██║  ██║
-    ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝
-            // [ARTIFICIAL_INTELLIGENCE] //
-            `;
-
-            window.addEventListener('keydown', (e) => {
-                if (e.key === '`' || e.key === '~') {
-                    e.preventDefault();
-                    AudioController.playSound('click');
-                    const isHidden = terminal.style.display === 'none' || terminal.style.display === '';
-                    terminal.style.display = isHidden ? 'flex' : 'none';
-                    if (isHidden) input.focus();
-                }
-                if (e.key === 'Escape' && terminal.style.display === 'flex') {
-                    AudioController.playSound('click');
-                    terminal.style.display = 'none';
-                }
-            });
-
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const cmd = input.value.trim().toLowerCase();
-                    output.textContent += `\nHK_OS:/$ ${cmd}\n`;
-                    
-                    switch (cmd) {
-                        case 'help':
-                            output.textContent += "Available commands:\n  run mafia_ai.exe  - [REDACTED]\n  ls_projects       - List active modules\n  clear             - Clear console\n  exit              - Close terminal";
-                            break;
-                        case 'run mafia_ai.exe':
-                            AudioController.playSound('boot');
-                            output.textContent += "Executing... Accessing secure module...\n" + mafiaArt + "\n'The only thing smarter than a con artist is the code running the con.'\nModule loaded.";
-                            break;
-                        case 'ls_projects':
-                            output.textContent += "[01] 3D_SAREE_CUSTOMIZATION\n[02] US_ARMY_ONBOARDING\n[03] MAFIA_AI_GAME\n[04] BEAUTY_REC_ENGINE";
-                            break;
-                        case 'clear':
-                            output.textContent = "NEURAL_CITY_OS v2.0 - Console Cleared.";
-                            break;
-                        case 'exit':
-                            terminal.style.display = 'none';
-                            break;
-                        default:
-                            output.textContent += `COMMAND_NOT_FOUND: "${cmd}". Type 'help' for list.`;
-                    }
-                    
-                    input.value = '';
-                    output.scrollTop = output.scrollHeight;
-                }
-            });
-
         });
-    </script>
-</body>
-</html>
+
+
+        // --- [BOOT_SEQUENCE_CONTROLLER] --- 
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingStatus = document.getElementById('loading-status');
+        const jackInButton = document.getElementById('jack-in-button');
+        const mainApp = document.getElementById('main-app');
+        const statusUpdates = [
+            "RENDERING NEON GRID...",
+            "CALIBRATING NEURAL NET...",
+            "ACCESSING AI CORE...",
+            "BOOT SEQUENCE COMPLETE."
+        ];
+        let statusIndex = 0;
+        
+        const statusInterval = setInterval(() => {
+            if (statusIndex < statusUpdates.length) {
+                loadingStatus.textContent = statusUpdates[statusIndex];
+                statusIndex++;
+            } else {
+                clearInterval(statusInterval);
+                jackInButton.style.display = 'block';
+            }
+        }, 750);
+
+        jackInButton.addEventListener('click', () => {
+            AudioController.playSound('boot');
+            AudioController.startAmbient();
+            
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.visibility = 'hidden';
+            mainApp.style.visibility = 'visible';
+            mainApp.style.opacity = '1';
+            
+            setTimeout(() => loadingScreen.remove(), 1500);
+        });
+
+        // --- [HUD_CONTROLLER] --- 
+        const clock = document.getElementById('hud-clock');
+        const objectiveText = document.getElementById('hud-objective-text');
+        const sections = document.querySelectorAll('.district');
+        const mapDots = document.querySelectorAll('.map-dot');
+        
+        setInterval(() => {
+            clock.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+        }, 1000);
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                let mapDot = document.querySelector(`.map-dot[data-target="#${id}"]`);
+
+                if (entry.isIntersecting) {
+                    let objective = "Explore Heena portfolio";
+                    if (id === 'projects-district') objective = "Review Project Database";
+                    if (id === 'experience-district') objective = "Scan Career Event Log";
+                    if (id === 'contact-district') objective = "Access Contact Uplink";
+                    
+                    objectiveText.textContent = objective;
+                    
+                    mapDots.forEach(dot => dot.classList.remove('active'));
+                    if(mapDot) mapDot.classList.add('active');
+                }
+            });
+        }, { rootMargin: "-40% 0px -60% 0px", threshold: 0 });
+
+        sections.forEach(sec => observer.observe(sec));
+        
+        mapDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                document.querySelector(dot.dataset.target).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // --- [NEW] SCROLL_REVEAL_CONTROLLER] --- 
+        const revealElements = document.querySelectorAll('.reveal-fade-up');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // --- [NEW] PROJECT_FLIP_CONTROLLER ---
+        const projectPanels = document.querySelectorAll('.project-panel');
+        
+        projectPanels.forEach(panel => {
+            panel.addEventListener('click', (e) => {
+                // Prevent flip if the 'AI Analysis' button was clicked
+                if (e.target.closest('.analysis-button')) {
+                    return;
+                }
+                
+                // Prevent flip if a link is clicked (like the 'Live Demo' link)
+                if (e.target.closest('a')) {
+                    return;
+                }
+
+                // Toggle the flip class on the main panel
+                panel.classList.toggle('is-flipped');
+                // Play sound, but only if the click is not on the button
+                if (!e.target.closest('.analysis-button')) {
+                     AudioController.playSound('click');
+                }
+            });
+        });
+
+
+        // --- [LOCAL AI ANALYSIS MODAL CONTROLLER] --- 
+        const modalOverlay = document.getElementById('gemini-modal-overlay');
+        const modalTitle = document.getElementById('gemini-modal-title');
+        const modalContent = document.getElementById('gemini-modal-content');
+        const modalClose = document.getElementById('gemini-modal-close');
+        const loaderHTML = '<div class="loader"></div>';
+        
+        function generateLocalAnalysis(title, description) {
+            const descLower = description.toLowerCase();
+            const bullets = [];
+
+            if (descLower.includes('3d') || descLower.includes('ar')) {
+                bullets.push("* Strong focus on immersive 3D/AR interfaces, combining perception, rendering, and real-time UX.");
+            }
+            if (descLower.includes('recommendation') || descLower.includes('faiss')) {
+                bullets.push("* Emphasizes personalized recommendation systems with vector search and retrieval-augmented pipelines.");
+            }
+            if (descLower.includes('game')) {
+                bullets.push("* Blends game design, narrative systems, and AI-driven behaviour for interactive storytelling.");
+            }
+            if (descLower.includes('army') || descLower.includes('onboarding')) {
+                bullets.push("* Tackles complex onboarding and access workflows with an emphasis on usability and security.");
+            }
+             if (descLower.includes('jobmatch') || descLower.includes('job portal')) {
+                bullets.push("* Demonstrates full-stack capability with React, Node.js, and PostgreSQL to create a complete, data-driven application.");
+            }
+            if (descLower.includes('financial') || descLower.includes('stock market')) {
+                bullets.push("* Utilizes Python/Flask and third-party APIs for real-time data processing and advanced financial analytics.");
+            }
+            if (descLower.includes('brain tumor') || descLower.includes('u-net')) {
+                bullets.push("* Applies deep learning (U-Net) to a complex medical imaging problem, resulting in a formal research publication.");
+            }
+
+            if (bullets.length === 0) {
+                bullets.push("* Uses full-stack engineering and AI to solve user-centric problems.");
+            }
+            bullets.push("* Shows clear ownership across problem discovery, design, implementation, and iteration.");
+            bullets.push("* Demonstrates potential to scale into production settings with more data, users, and integration points.");
+            bullets.push("* Highlights a strong balance between technical depth and user experience.");
+
+            return `PROJECT: ${title}\n\n` +
+                   "Key Technical Takeaways:\n" +
+                   bullets.join("\n");
+        }
+
+        window.openAnalysisModal = async (title, description) => {
+            AudioController.playSound('click');
+            modalTitle.textContent = `// AI ANALYSIS: ${title}`;
+            modalContent.innerHTML = loaderHTML;
+            modalOverlay.classList.add('modal-visible');
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const analysisText = generateLocalAnalysis(title, description);
+            modalContent.textContent = analysisText;
+        };
+
+        function closeAnalysisModal() {
+            AudioController.playSound('click');
+            modalOverlay.classList.remove('modal-visible');
+            setTimeout(() => {
+                modalContent.innerHTML = loaderHTML;
+                modalTitle.textContent = "// RUNNING ANALYSIS...";
+            }, 300);
+        }
+
+        modalClose.addEventListener('click', closeAnalysisModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeAnalysisModal();
+            }
+        });
+        
+        // --- [NEW] CHATBOT_ASSISTANT_CONTROLLER (Renamed to ROBOT) --- 
+        
+        // 1. Profile Data Object
+        const PROFILE_DATA = {
+            greeting: "Hello! I'm Heena's AI assistant. You can ask me about her projects, experience, or how to contact her. What would you like to know?",
+            about: "Heena Kousar is an AI Researcher at the University of Southern California. She specializes in 3D saree customization using AI and AR, as well as personalized recommendation systems. She loves turning complex machine learning ideas into polished, user-friendly web experiences.",
+            projects: [
+                { 
+                    title: "3D Saree Customization Platform", 
+                    keywords: ["saree", "3d", "customization", "ar", "augmented reality"],
+                    description: "This is an AI-powered 3D saree customization and virtual try-on platform. It uses computer vision, fabric simulation, and augmented reality to allow real-time saree draping and texture rendering." 
+                },
+                { 
+                    title: "U.S. Army Onboarding & Access", 
+                    keywords: ["army", "onboarding", "military"],
+                    description: "Heena designed a centralized digital platform to streamline onboarding and system access for the United States Army. She conducted user research and built a web-based prototype to meet military compliance." 
+                },
+                { 
+                    title: "Mafia AI – Cinematic Mystery Game", 
+                    keywords: ["mafia", "game", "mystery", "cinematic"],
+                    description: "A story-driven mystery game that blends AI-generated narrative with multi-world environments. Heena architected the front-end in React and back-end in Node.js, using AI to adjust clues based on player behavior. You can play a live demo!" 
+                },
+                { 
+                    title: "Beauty Product Recommendation", 
+                    keywords: ["beauty", "product", "recommendation", "engine", "advisor"],
+                    description: "An AI-powered web app that provides highly personalized product recommendations by analyzing user profiles, preferences, and skin types. It uses collaborative filtering and content-based algorithms. You can try the live demo!" 
+                },
+                { 
+                    title: "JobMatch: Advanced Job Portal", 
+                    keywords: ["jobmatch", "job", "portal", "full-stack"],
+                    description: "A comprehensive full-stack job portal built with React, Express.js, and PostgreSQL. It features real-time job search, secure JWT authentication, and an application tracking system. A live demo is available."
+                },
+                { 
+                    title: "Financial Market Intelligence Platform", 
+                    keywords: ["financial", "stock", "market", "intelligence", "flask"],
+                    description: "A financial analysis platform built with Python and Flask. It provides stock market insights and risk assessment tools using real-time data and financial APIs. A live demo is available."
+                },
+                { 
+                    title: "Brain Tumor Segmentation", 
+                    keywords: ["brain", "tumor", "segmentation", "publication", "research", "u-net"],
+                    description: "This is a research publication on an improved U-Net framework for semantic segmentation of brain tumors in MRI images. It was published in the IRJET Journal in July 2022."
+                }
+            ],
+            experience: [
+                { 
+                    role: "AI Researcher", 
+                    company: "University of Southern California", 
+                    keywords: ["researcher", "usc", "current", "present"],
+                    date: "July 2025 – Present",
+                    summary: "As an AI Researcher at USC, Heena is currently architecting the 3D Saree Customization AI/AR platform and developing the core machine learning models for it."
+                },
+                { 
+                    role: "Co-Founder", 
+                    company: "Mafia AI (Independent Project)", 
+                    keywords: ["co-founder", "mafia ai", "founder"],
+                    date: "October 2025 – Present",
+                    summary: "As Co-Founder of Mafia AI, she leads full-stack development and user experience design for the cinematic AI game."
+                },
+                { 
+                    role: "AI Product Lead", 
+                    company: "USC (Beauty Rec Engine)", 
+                    keywords: ["product lead", "beauty engine"],
+                    date: "January 2025 – May 2025",
+                    summary: "As AI Product Lead, she managed the end-to-end development of the AI recommendation system, integrating OpenAI and FAISS to improve engagement by about 20%."
+                },
+                { 
+                    role: "Web Developer Intern", 
+                    company: "Kintsugi Global, Los Angeles", 
+                    keywords: ["intern", "web developer", "kintsugi"],
+                    date: "May 2024 – July 2024",
+                    summary: "As an intern, she built responsive React.js pages for an anime manga reader and implemented smooth navigation and zoom features."
+                }
+            ],
+            contact: "You can contact Heena by email at hkbaig5@gmail.com, connect with her on LinkedIn, or request her resume. Just click the links in the 'Contact' section.",
+            fallback: "I'm not quite sure about that. I can answer questions about Heena's projects, her professional experience, or how to contact her."
+        };
+        
+        // 2. Chatbot DOM Elements (Renamed)
+        const chatTriggerButton = document.getElementById('chat-trigger-button'); // [NEW] New trigger
+        const robotChatContainer = document.getElementById('robot-chat-container');
+        const robotChatPanel = document.getElementById('robot-chat-panel');
+        const robotChatClose = document.getElementById('robot-chat-close');
+        // const chatToggle = document.getElementById('hud-chat-toggle'); // Old trigger
+        const robotChatMessages = document.getElementById('robot-chat-messages');
+        const robotChatInput = document.getElementById('robot-chat-input');
+        const robotChatSend = document.getElementById('robot-chat-send');
+        const robotChatMic = document.getElementById('robot-chat-mic');
+        const robotChatSpeaker = document.getElementById('robot-chat-speaker');
+
+        // SVG icons for speaker on/off
+        const SPEAKER_SVG_ON = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
+                <path d="M19 8a5 5 0 0 1 0 8"></path>
+                <path d="M16 5a9 9 0 0 1 0 14"></path>
+            </svg>`;
+
+        const SPEAKER_SVG_OFF = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+            </svg>`;
+        
+        // 3. Speech Recognition (STT)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            
+            recognition.onstart = () => {
+                robotChatMic.classList.add('recording');
+                robotChatMic.textContent = '...';
+            };
+            
+            recognition.onend = () => {
+                robotChatMic.classList.remove('recording');
+                robotChatMic.textContent = '🎤';
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript.trim();
+                robotChatInput.value = transcript;
+                handleUserMessage();
+            };
+            
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                robotChatMic.classList.remove('recording');
+                robotChatMic.textContent = '🎤';
+            };
+        } else {
+            console.warn("Speech Recognition not supported in this browser.");
+            robotChatMic.style.display = 'none';
+        }
+
+        // Per-chat assistant TTS control (mute/unmute assistant voice)
+        let robotTTSEnabled = true; // default: assistant voice allowed
+        const ROBOT_TTS_KEY = 'robot_tts_enabled';
+
+        // Initialize from localStorage if available
+        try {
+            const stored = localStorage.getItem(ROBOT_TTS_KEY);
+            if (stored !== null) {
+                robotTTSEnabled = stored === 'true';
+            }
+        } catch (e) {
+            // localStorage may be unavailable in some environments
+            console.warn('Could not read robot TTS preference from localStorage.', e);
+        }
+
+        if (robotChatSpeaker) {
+            // Apply initial UI state (use SVG icons)
+            robotChatSpeaker.setAttribute('aria-pressed', String(!robotTTSEnabled));
+            robotChatSpeaker.innerHTML = robotTTSEnabled ? SPEAKER_SVG_ON : SPEAKER_SVG_OFF;
+            robotChatSpeaker.title = robotTTSEnabled ? 'Toggle Speaker (On)' : 'Toggle Speaker (Muted)';
+
+            robotChatSpeaker.addEventListener('click', () => {
+                robotTTSEnabled = !robotTTSEnabled;
+                // When aria-pressed is true -> muted
+                robotChatSpeaker.setAttribute('aria-pressed', String(!robotTTSEnabled));
+                robotChatSpeaker.innerHTML = robotTTSEnabled ? SPEAKER_SVG_ON : SPEAKER_SVG_OFF;
+                robotChatSpeaker.title = robotTTSEnabled ? 'Toggle Speaker (On)' : 'Toggle Speaker (Muted)';
+
+                try {
+                    localStorage.setItem(ROBOT_TTS_KEY, String(robotTTSEnabled));
+                } catch (e) {
+                    console.warn('Could not persist robot TTS preference to localStorage.', e);
+                }
+
+                AudioController.playSound('click');
+                if (!robotTTSEnabled && window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                }
+            });
+        }
+        
+        // 4. Chatbot UI Functions (Renamed)
+        function openRobotChat() {
+            AudioController.playSound('click');
+            robotChatContainer.classList.add('modal-visible');
+            chatTriggerButton.style.display = 'none'; // [NEW] Hide trigger
+            
+            if (robotChatMessages.children.length === 0) {
+                // Add initial greeting
+                addChatMessage(PROFILE_DATA.greeting, 'bot');
+                speakText(PROFILE_DATA.greeting);
+            }
+            robotChatInput.focus();
+        }
+
+        function closeRobotChat() {
+            AudioController.playSound('click');
+            robotChatContainer.classList.remove('modal-visible');
+            chatTriggerButton.style.display = 'flex'; // [NEW] Show trigger
+            window.speechSynthesis.cancel(); // Stop speaking on close
+        }
+
+        // [CHANGED] Use new trigger button
+        chatTriggerButton.addEventListener('click', openRobotChat);
+        // chatToggle.addEventListener('click', openRobotChat); // Old trigger
+        robotChatClose.addEventListener('click', closeRobotChat);
+        // Removed overlay click-to-close, as it's no longer a full overlay
+        
+        // 5. Chat Core Logic
+        robotChatSend.addEventListener('click', handleUserMessage);
+        robotChatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleUserMessage();
+            }
+        });
+        
+        if (recognition) {
+            robotChatMic.addEventListener('click', () => {
+                AudioController.playSound('click');
+                if (robotChatMic.classList.contains('recording')) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+        }
+
+        function handleUserMessage() {
+            const userText = robotChatInput.value.trim();
+            if (userText === "") return;
+            
+            addChatMessage(userText, 'user');
+            robotChatInput.value = "";
+            
+            // Get and display bot response
+            setTimeout(() => {
+                const botText = getBotResponse(userText);
+                addChatMessage(botText, 'bot');
+                speakText(botText);
+            }, 500);
+        }
+        
+        function addChatMessage(message, sender) {
+            const messageEl = document.createElement('div');
+            messageEl.classList.add('chat-message', sender);
+            messageEl.textContent = message;
+            robotChatMessages.appendChild(messageEl);
+            // Scroll to bottom
+            robotChatMessages.scrollTop = robotChatMessages.scrollHeight;
+        }
+        
+        // 6. Text-to-Speech (TTS)
+        
+        // [NEW] Voice selection logic
+        let femaleVoice = null;
+        function loadVoices() {
+            if (!window.speechSynthesis) return;
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length === 0) return; // Voices not ready
+
+            // Try to find a specific, high-quality female voice first
+            femaleVoice = voices.find(v => v.name.includes('Google US English') && v.lang.startsWith('en') && v.name.toLowerCase().includes('female'));
+            if (!femaleVoice) {
+                // Broader search for other common female voices
+                femaleVoice = voices.find(v => v.lang.startsWith('en') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('susan') || v.name.toLowerCase().includes('linda')));
+            }
+            // Fallback to any US English voice if no female voice is found
+            if (!femaleVoice) {
+                femaleVoice = voices.find(v => v.lang === 'en-US' || v.lang.startsWith('en'));
+            }
+        }
+
+        // Load voices initially and set up listener for when they change
+        loadVoices();
+        if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        function speakText(text) {
+            if (!AudioController.soundEnabled || !window.speechSynthesis || !robotTTSEnabled) return;
+
+            // Stop any previous speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Set the female voice if found
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+            
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 7. Bot Response Logic (Keyword-based)
+        function getBotResponse(text) {
+            const lowerText = text.toLowerCase();
+            
+            if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('hey')) {
+                return "Hello! How can I help you learn about Heena?";
+            }
+            
+            if (lowerText.includes('about') || lowerText.includes('who is') || lowerText.includes('tell me about heena')) {
+                return PROFILE_DATA.about;
+            }
+            
+            if (lowerText.includes('contact') || lowerText.includes('email') || lowerText.includes('linkedin') || lowerText.includes('reach out')) {
+                return PROFILE_DATA.contact;
+            }
+
+            // Check for projects
+            if (lowerText.includes('project') || lowerText.includes('work') || lowerText.includes('publication')) {
+                for (const project of PROFILE_DATA.projects) {
+                    if (project.keywords.some(k => lowerText.includes(k))) {
+                        return project.description;
+                    }
+                }
+                // List all projects if no specific one is mentioned
+                const projectTitles = PROFILE_DATA.projects.map(p => p.title).join(', ');
+                return `Heena has worked on several projects, including: ${projectTitles}. Which one would you like to know more about?`;
+            }
+
+            // Check for experience
+            if (lowerText.includes('experience') || lowerText.includes('job') || lowerText.includes('role') || lowerText.includes('where') || lowerText.includes('worked')) {
+                for (const exp of PROFILE_DATA.experience) {
+                    if (exp.keywords.some(k => lowerText.includes(k))) {
+                        return exp.summary;
+                    }
+                }
+                // List all roles if no specific one is mentioned
+                const roles = PROFILE_DATA.experience.map(e => `${e.role} at ${e.company}`).join('; ');
+                return `Heena's experience includes: ${roles}. You can ask me for details on a specific role.`;
+            }
+            
+            if (lowerText.includes('thanks') || lowerText.includes('thank you')) {
+                return "You're welcome! Is there anything else I can help you with?";
+            }
+
+            return PROFILE_DATA.fallback;
+        }
+        
+
+        // --- [DEBUG_TERMINAL_CONTROLLER] --- 
+        const terminal = document.getElementById('debug-terminal');
+        const output = document.getElementById('debug-output');
+        const input = document.getElementById('debug-input');
+        const mafiaArt = `
+███╗   ███╗ █████╗ ███████╗██╗ █████╗ 
+████╗ ████║██╔══██╗██╔════╝██║██╔══██╗
+██╔████╔██║███████║█████╗  ██║███████║
+██║╚██╔╝██║██╔══██║██╔══╝  ██║██╔══██║
+██║ ╚═╝ ██║██║  ██║███████╗██║██║  ██║
+╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝
+        // [ARTIFICIAL_INTELLIGENCE] //
+        `;
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '`' || e.key === '~') {
+                e.preventDefault();
+                AudioController.playSound('click');
+                const isHidden = terminal.style.display === 'none' || terminal.style.display === '';
+                terminal.style.display = isHidden ? 'flex' : 'none';
+                if (isHidden) input.focus();
+            }
+            if (e.key === 'Escape' && terminal.style.display === 'flex') {
+                AudioController.playSound('click');
+                terminal.style.display = 'none';
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = input.value.trim().toLowerCase();
+                output.textContent += `\nHK_OS:/$ ${cmd}\n`;
+                
+                switch (cmd) {
+                    case 'help':
+                        output.textContent += "Available commands:\n  run mafia_ai.exe  - [REDACTED]\n  ls_projects       - List active modules\n  clear             - Clear console\n  exit              - Close terminal";
+                        break;
+                    case 'run mafia_ai.exe':
+                        AudioController.playSound('boot');
+                        output.innerHTML += "Executing... Accessing secure module...<br><pre style=\"color:var(--accent-cyan);\">" + mafiaArt + "</pre><br>'The only thing smarter than a con artist is the code running the con.'<br>Module loaded.";
+                        break;
+                    case 'ls_projects':
+                        output.textContent += "[01] 3D_SAREE_CUSTOMIZATION\n[02] US_ARMY_ONBOARDING\n[03] MAFIA_AI_GAME\n[04] BEAUTY_REC_ENGINE\n[05] JOBMATCH_PORTAL\n[06] FINANCIAL_INTEL\n[07] BRAIN_TUMOR_SEGMENTATION";
+                        break;
+                    case 'clear':
+                        output.textContent = "NEURAL_CITY_OS v2.0 - Console Cleared.";
+                        break;
+                    case 'exit':
+                        terminal.style.display = 'none';
+                        break;
+                    default:
+                        output.textContent += `COMMAND_NOT_FOUND: "${cmd}". Type 'help' for list.`;
+                }
+                
+                input.value = '';
+                output.scrollTop = output.scrollHeight;
+            }
+        });
+
+    });
+</script>
+</body> </html> 
